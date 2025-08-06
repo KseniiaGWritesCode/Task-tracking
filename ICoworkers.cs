@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace TaskTracking
 {
-    interface ICoworkers
+    public interface ICoworkers
     {
         public string Name { get; set; }
         public DateTime Birthday { get; set; }

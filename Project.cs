@@ -6,12 +6,13 @@ using System.Threading.Tasks;
 
 namespace TaskTracking
 {
-    class Project : IToDoProperties
+    public class Project : IToDoProperties
     {
         public string Name { get; set; }
         public DateTime DueDate { get; set; }
         public string Description { get; set; }
         Priority Priority { get; set; }
         Task Task { get; set; }
+        Coworker Manager { get; set; }
     }
 }
