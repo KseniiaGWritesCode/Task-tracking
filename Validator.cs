@@ -9,8 +9,10 @@ namespace TaskTracking
 {
     public class Validator
     {
-        public void CategoryValidator () 
+        KeeperOfData keeper = new KeeperOfData();
+        public bool CategoryValidator () 
         {
+            
             while (true)
             {
                 string categoryUserInput = Console.ReadLine();
@@ -26,24 +28,25 @@ namespace TaskTracking
                     continue;
                 }
 
-                var keeper = new KeeperOfData();
                 switch (category)
                 {
                     case Category.tasks:
-                        var catTasks = new Operations<Task>(keeper.Tasks);
+                        OperationValidator(new Operations<Task>(keeper.Tasks));
                         break;
                     case Category.projects:
-                        var catProjects = new Operations<Project>(keeper.Projects);
+                        OperationValidator(new Operations<Project>(keeper.Projects));
                         break;
                     case Category.coworkers:
-                        var catCoworkers = new Operations<Coworker>(keeper.Coworkers);
+                        OperationValidator(new Operations<Coworker>(keeper.Coworkers));
                         break;
                 }
                 break;
             }
+            return true;
         }
-        public void OperationValidator()
+        public void OperationValidator<T> (Operations<T> ops)
         {
+            AnsiConsole.MarkupLine("[lightcyan1]What do you want to do - create, read, update or delete?[/]");
             while (true)
             {
                 string taskUserInput = Console.ReadLine();
@@ -55,24 +58,18 @@ namespace TaskTracking
 
                 if (!Enum.TryParse<Operation>(taskUserInput.Trim().ToLower(), out var operation))
                 {
-                    AnsiConsole.MarkupLine("[magenta1]Category doesn't exhist![/]");
+                    AnsiConsole.MarkupLine("[magenta1]Operation doesn't exhist![/]");
                     continue;
                 }
 
                 switch(operation)
                 {
                     case Operation.create:
-                        
+                        ops.Create(Category.tasks);
                         break;
                 }
             }
         }
-    }
-    public enum Category
-    {
-        tasks,
-        projects,
-        coworkers
     }
 
     public enum Operation

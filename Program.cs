@@ -10,10 +10,8 @@ namespace TaskTracking
 
             while (true)
             {
-                var inputValidation = new Validator();
-                inputValidation.CategoryValidator();
-                AnsiConsole.MarkupLine("[lightcyan1]What do you want to do - create, read, update or delete?[/]");
-
+                //var inputValidation = new Validator();
+                //inputValidation.CategoryValidator();
             }
             
         }

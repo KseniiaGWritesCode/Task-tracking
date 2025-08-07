@@ -14,5 +14,13 @@ namespace TaskTracking
         Position Position { get; set; }
         Project Project { get; set; }
         Task Task { get; set; }
+
+        public Coworker(string name, DateTime birthday, string mail, Position position, KeeperOfData projects, KeeperOfData tasks) 
+        { 
+            Name = name;
+            Birthday = birthday;
+            EMail = mail;
+            Position = position;
+        }
     }
 }

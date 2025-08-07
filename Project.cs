@@ -14,5 +14,14 @@ namespace TaskTracking
         Priority Priority { get; set; }
         Task Task { get; set; }
         Coworker Manager { get; set; }
+
+        public Project(string name, DateTime dueDate, string description, Priority priority, KeeperOfData tasks, KeeperOfData manager)
+            
+        { 
+            Name = name;
+            DueDate = dueDate;
+            Description = description;
+            Priority = priority;
+        }
     }
 }
