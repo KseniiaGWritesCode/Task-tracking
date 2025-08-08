@@ -9,8 +9,7 @@ namespace TaskTracking
 {
     public class Validator
     {
-        KeeperOfData keeper = new KeeperOfData();
-        public bool CategoryValidator () 
+        public bool CategoryValidator() 
         {
             
             while (true)
@@ -27,24 +26,12 @@ namespace TaskTracking
                     AnsiConsole.MarkupLine("[magenta1]Category doesn't exhist![/]");
                     continue;
                 }
-
-                switch (category)
-                {
-                    case Category.tasks:
-                        OperationValidator(new Operations<Task>(keeper.Tasks));
-                        break;
-                    case Category.projects:
-                        OperationValidator(new Operations<Project>(keeper.Projects));
-                        break;
-                    case Category.coworkers:
-                        OperationValidator(new Operations<Coworker>(keeper.Coworkers));
-                        break;
-                }
                 break;
             }
             return true;
         }
-        public void OperationValidator<T> (Operations<T> ops)
+
+        public bool OperationValidator<T> (Operations<T> ops)
         {
             AnsiConsole.MarkupLine("[lightcyan1]What do you want to do - create, read, update or delete?[/]");
             while (true)
@@ -56,27 +43,27 @@ namespace TaskTracking
                     continue;
                 }
 
-                if (!Enum.TryParse<Operation>(taskUserInput.Trim().ToLower(), out var operation))
+                if (!Enum.TryParse<ChooseOperation>(taskUserInput.Trim().ToLower(), out var operation))
                 {
                     AnsiConsole.MarkupLine("[magenta1]Operation doesn't exhist![/]");
                     continue;
                 }
-
-                switch(operation)
-                {
-                    case Operation.create:
-                        ops.Create(Category.tasks);
-                        break;
-                }
             }
         }
-    }
 
-    public enum Operation
-    {
-        create,
-        read,
-        update,
-        delete
+        public bool TaskValidator<T> (Operations<T> ops)
+        {
+            ProcessingTask processingTask = new ProcessingTask();
+            KeeperOfData keeperOfData = new KeeperOfData();
+
+            if (!string.IsNullOrWhiteSpace(processingTask.Name))
+            {
+                for (int i = 0; i <= keeperOfData.Coworkers.Count; i++)
+                {
+
+                }
+            }
+            return true;
+        }
     }
 }

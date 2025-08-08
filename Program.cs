@@ -10,8 +10,7 @@ namespace TaskTracking
 
             while (true)
             {
-                //var inputValidation = new Validator();
-                //inputValidation.CategoryValidator();
+                AppController appController = new AppController();
             }
             
         }
