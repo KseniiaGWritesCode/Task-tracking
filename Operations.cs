@@ -38,7 +38,7 @@ namespace TaskTracking
         public void TaskCreate()
         {
             AnsiConsole.MarkupLine("[lightcyan1]Please enter the following parameters of the new task, each supplemented with '':[/]");
-            AnsiConsole.MarkupLine("[darkolivegreen1] 'name' 'due date: dd.mm.yyyy' 'description' 'priority: low, medium or high' 'project' 'manager' 'employee'[/]");
+            AnsiConsole.MarkupLine("[darkolivegreen1] 'name' 'dd.mm.yyyy (due date)' 'description' 'priority (low, medium or high)' 'project' 'manager' 'employee'[/]");
             
             string taskInput = Console.ReadLine();
             List<string> tasks = new List<string>();

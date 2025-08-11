@@ -8,8 +8,8 @@ namespace TaskTracking
 {
     public class KeeperOfData
     {
-        public List <Coworker> Coworkers = new();
-        public List<Task> Tasks = new List<Task>();
+        public List <Coworker> Coworkers = new List<Coworker>();
+        public List<TaskItem> Tasks = new List<TaskItem>();
         public List<Project> Projects = new List<Project>();
     }
 }

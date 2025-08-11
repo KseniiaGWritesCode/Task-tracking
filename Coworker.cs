@@ -11,9 +11,9 @@ namespace TaskTracking
         public string Name { get; set; }
         public DateTime Birthday { get; set; }
         public string EMail { get; set; }
-        Position Position { get; set; }
-        Project Project { get; set; }
-        Task Task { get; set; }
+        public Position Position { get; set; }
+        public Project Project { get; set; }
+        public TaskItem Task { get; set; }
 
         public Coworker(string name, DateTime birthday, string mail, Position position, KeeperOfData projects, KeeperOfData tasks) 
         { 

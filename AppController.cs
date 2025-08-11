@@ -16,7 +16,7 @@ namespace TaskTracking
         public AppController()
         {
             bool categoryValidated = programValidator.CategoryValidator();
-            bool goingInTasks = programValidator.OperationValidator(new Operations<Task>(keeper.Tasks));
+            bool goingInTasks = programValidator.OperationValidator(new Operations<TaskItem>(keeper.Tasks));
             bool goingInProjects = programValidator.OperationValidator(new Operations<Project>(keeper.Projects));
             bool goingInCoworkers = programValidator.OperationValidator(new Operations<Coworker>(keeper.Coworkers));
 
@@ -25,7 +25,7 @@ namespace TaskTracking
                 switch(Category)
                 {
                     case Category.tasks:
-                        programValidator.OperationValidator(new Operations<Task>(keeper.Tasks));
+                        programValidator.OperationValidator(new Operations<TaskItem>(keeper.Tasks));
                         break;
                     case Category.projects:
                         programValidator.OperationValidator(new Operations<Project>(keeper.Projects));
@@ -41,7 +41,8 @@ namespace TaskTracking
                 switch (Operation)
                 {
                     case ChooseOperation.create:
-                        new Operations<Task>(keeper.Tasks).Create(Category.tasks);
+                        new Operations<TaskItem>(keeper.Tasks).Create(Category.tasks);
+
                         break;
                 }
             }

@@ -12,7 +12,7 @@ namespace TaskTracking
         public DateTime DueDate { get; set; }
         public string Description { get; set; }
         Priority Priority { get; set; }
-        Task Task { get; set; }
+        TaskItem Task { get; set; }
         Coworker Manager { get; set; }
 
         public Project(string name, DateTime dueDate, string description, Priority priority, KeeperOfData tasks, KeeperOfData manager)

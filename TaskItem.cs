@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace TaskTracking
 {
-    public class Task : IToDoProperties
+    public class TaskItem : IToDoProperties
     {
         public string Name { get; set; }
         public DateTime DueDate { get; set; }
@@ -16,7 +16,7 @@ namespace TaskTracking
         Coworker Manager { get; set; }
         Coworker Employee { get; set; }
 
-        public Task(string name, DateTime dueDate, string description, Priority priority, Project project, KeeperOfData manager, KeeperOfData employee) 
+        public TaskItem (string name, DateTime dueDate, string description, Priority priority, Project project, KeeperOfData manager, KeeperOfData employee) 
         { 
             Name = name;
             DueDate = dueDate;
