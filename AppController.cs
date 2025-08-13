@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Spectre.Console;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,23 +16,31 @@ namespace TaskTracking
 
         public AppController()
         {
-            bool categoryValidated = programValidator.CategoryValidator();
+            //bool categoryValidated = programValidator.CategoryValidator();
+            var categoryValidated = programValidator.CategoryValidator();
+
             bool goingInTasks = programValidator.OperationValidator(new Operations<TaskItem>(keeper.Tasks));
             bool goingInProjects = programValidator.OperationValidator(new Operations<Project>(keeper.Projects));
             bool goingInCoworkers = programValidator.OperationValidator(new Operations<Coworker>(keeper.Coworkers));
 
-            if (categoryValidated)
+            if (categoryValidated == Category)
             {
                 switch(Category)
                 {
                     case Category.tasks:
-                        programValidator.OperationValidator(new Operations<TaskItem>(keeper.Tasks));
+                        goingInTasks = true;
+                        goingInProjects = false;
+                        goingInCoworkers = false;
                         break;
                     case Category.projects:
-                        programValidator.OperationValidator(new Operations<Project>(keeper.Projects));
+                        goingInProjects = true;
+                        goingInTasks = false;
+                        goingInCoworkers = false;
                         break;
                     case Category.coworkers:
-                        programValidator.OperationValidator(new Operations<Coworker>(keeper.Coworkers));
+                        goingInCoworkers = true;
+                        goingInProjects = false;
+                        goingInTasks = false;
                         break;
                 }
             }
@@ -41,8 +50,12 @@ namespace TaskTracking
                 switch (Operation)
                 {
                     case ChooseOperation.create:
-                        new Operations<TaskItem>(keeper.Tasks).Create(Category.tasks);
-
+                        var taskOperations = new Operations<TaskItem>(keeper.Tasks);
+                        ProcessingTask processingTask = new();
+                        var newTask = taskOperations.Create(processingTask);
+                        var taskValidated = programValidator.TaskValidator<ProcessingTask>(newTask);
+                        keeper.Tasks.Add(processingTask.TransferToTaskItem(processingTask.Name, processingTask.DueDateFinal, processingTask.Description, processingTask.PriorityFinal, processingTask.ProjectFinal, processingTask.ManagerFinal, processingTask.EmployeeFinal));
+                        AnsiConsole.MarkupLine($"[darkolivegreen1] Task {processingTask.Name} successfully added! [/]");
                         break;
                 }
             }

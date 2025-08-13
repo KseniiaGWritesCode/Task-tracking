@@ -16,12 +16,15 @@ namespace TaskTracking
         Coworker Manager { get; set; }
         Coworker Employee { get; set; }
 
-        public TaskItem (string name, DateTime dueDate, string description, Priority priority, Project project, KeeperOfData manager, KeeperOfData employee) 
+        public TaskItem (string name, DateTime dueDate, string description, Priority priority, Project project, Coworker manager, Coworker employee) 
         { 
             Name = name;
             DueDate = dueDate;
             Description = description;
             Priority = priority;
+            Project = project;
+            Employee = employee;
+            Manager = manager;
         }
     }
 }

@@ -13,26 +13,28 @@ namespace TaskTracking
 {
     public class Validator
     {
-        public bool CategoryValidator() 
+        public Category CategoryValidator() 
         {
-            
+            Category category = new Category();
             while (true)
             {
                 string categoryUserInput = Console.ReadLine();
+
                 if (string.IsNullOrWhiteSpace(categoryUserInput))
                 {
                     AnsiConsole.MarkupLine("[magenta1]Empty input![/]");
                     continue;
                 }
 
-                if (!Enum.TryParse<Category>(categoryUserInput.Trim().ToLower(), out var category))
+                if (!Enum.TryParse<Category>(categoryUserInput.Trim().ToLower(), out category))
                 {
                     AnsiConsole.MarkupLine("[magenta1]Category doesn't exhist![/]");
                     continue;
                 }
+
                 break;
             }
-            return true;
+            return category;
         }
 
         public bool OperationValidator<T> (Operations<T> ops)
@@ -55,7 +57,7 @@ namespace TaskTracking
             }
         }
 
-        public bool TaskValidator<T> (Operations<T> ops)
+        public bool TaskValidator<T> (ProcessingTask processing)
         {
             ProcessingTask processingTask = new ProcessingTask();
             KeeperOfData keeperOfData = new KeeperOfData();
@@ -167,6 +169,7 @@ namespace TaskTracking
             {
                 AnsiConsole.MarkupLine("[magenta1]Something went wrong! Please check your inpur thoroughly and try again.[/]");
             }
+
 
             return true;
         }

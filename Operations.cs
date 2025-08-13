@@ -25,14 +25,17 @@ namespace TaskTracking
             return list;
         }
 
-        public void Create<T> (T item)
+        public T Create<T> (T item) where T : new()
         {
-            switch(item)
+            item = new T();
+
+            switch (item)
             {
                 case Category.tasks:
                     TaskCreate();
                     break;
             }
+            return item;
         }
 
         public void TaskCreate()
@@ -51,7 +54,7 @@ namespace TaskTracking
                     tasks.Add(match.Value);
                 }
 
-                FormingNewTask(tasks);
+                FormingNewItem<ProcessingTask>(tasks);
             }
             
             catch(Exception ex)
@@ -61,37 +64,45 @@ namespace TaskTracking
             }
         }
 
-        public void FormingNewTask (List<string> newTask)
+        public T FormingNewItem<T> (List<string> newItem) where T : new()
         {
-            ProcessingTask processingTask = new ProcessingTask();
-
-            for (int i = 0; i <= newTask.Count; i++)
+            T item = new T();
+            switch(item)
             {
-                switch(i)
-                {
-                    case 0:
-                        newTask[i] = processingTask.Name;
-                        break;
-                    case 1:
-                        newTask[i] = processingTask.DueDate;
-                        break;
-                    case 2:
-                        newTask[i] = processingTask.Description;
-                        break;
-                    case 3:
-                        newTask[i] = processingTask.Priority;
-                        break;
-                    case 4:
-                        newTask[i] = processingTask.Project;
-                        break;
-                    case 5:
-                        newTask[i] = processingTask.Manager;
-                        break;
-                    case 6:
-                        newTask[i] = processingTask.Employee;
-                        break;
-                }
+                case Category.tasks:
+                    ProcessingTask processingTask = new ProcessingTask();
+
+                    for (int i = 0; i < newItem.Count; i++)
+                    {
+                        switch (i)
+                        {
+                            case 0:
+                                processingTask.Name = newItem[i];
+                                break;
+                            case 1:
+                                processingTask.DueDate = newItem[i];
+                                break;
+                            case 2:
+                                processingTask.Description = newItem[i];
+                                break;
+                            case 3:
+                                processingTask.Priority = newItem[i];
+                                break;
+                            case 4:
+                                processingTask.Project = newItem[i];
+                                break;
+                            case 5:
+                                processingTask.Manager = newItem[i];
+                                break;
+                            case 6:
+                                processingTask.Employee = newItem[i];
+                                break;
+                        }
+                    }
+                    break;
             }
+            
+            return item;
         }
     }
 }
