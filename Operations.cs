@@ -11,34 +11,17 @@ namespace TaskTracking
 {
     public class Operations<T>
     {
-        KeeperOfData listOfTasks = new KeeperOfData();
-        KeeperOfData listOfProjects = new KeeperOfData();
-        KeeperOfData listOfCoworkers = new KeeperOfData();
-
         List<T> list = new();
         public Operations(List<T> list) 
         { 
-           
+           this.list = list;
         }
-        public List<T> See(T item)
+        public List<T> ShowList (T item)
         {
             return list;
         }
 
-        public T Create<T> (T item) where T : new()
-        {
-            item = new T();
-
-            switch (item)
-            {
-                case Category.tasks:
-                    TaskCreate();
-                    break;
-            }
-            return item;
-        }
-
-        public void TaskCreate()
+        public List<string> TaskCreate()
         {
             AnsiConsole.MarkupLine("[lightcyan1]Please enter the following parameters of the new task, each supplemented with '':[/]");
             AnsiConsole.MarkupLine("[darkolivegreen1] 'name' 'dd.mm.yyyy (due date)' 'description' 'priority (low, medium or high)' 'project' 'manager' 'employee'[/]");
@@ -54,55 +37,48 @@ namespace TaskTracking
                     tasks.Add(match.Value);
                 }
 
-                FormingNewItem<ProcessingTask>(tasks);
+                FormingNewTask<ProcessingTask>(tasks);
             }
             
             catch(Exception ex)
             {
                 AnsiConsole.MarkupLine("[magenta1]Something went wrong![/]");
-                return;
             }
+            return tasks;
         }
-
-        public T FormingNewItem<T> (List<string> newItem) where T : new()
+        //'Figma prototype' '20.09.2025' 'Clickable prototype for the project' 'low' 'Inhabited Mind' 'John Smith' 'Sarah Jessica Parker'
+        public ProcessingTask FormingNewTask<T> (List<string> newItem)
         {
-            T item = new T();
-            switch(item)
-            {
-                case Category.tasks:
-                    ProcessingTask processingTask = new ProcessingTask();
+                ProcessingTask processingTask = new ProcessingTask(newItem);
 
-                    for (int i = 0; i < newItem.Count; i++)
+                for (int i = 0; i < newItem.Count; i++)
+                {
+                    switch (i)
                     {
-                        switch (i)
-                        {
-                            case 0:
-                                processingTask.Name = newItem[i];
-                                break;
-                            case 1:
-                                processingTask.DueDate = newItem[i];
-                                break;
-                            case 2:
-                                processingTask.Description = newItem[i];
-                                break;
-                            case 3:
-                                processingTask.Priority = newItem[i];
-                                break;
-                            case 4:
-                                processingTask.Project = newItem[i];
-                                break;
-                            case 5:
-                                processingTask.Manager = newItem[i];
-                                break;
-                            case 6:
-                                processingTask.Employee = newItem[i];
-                                break;
-                        }
+                        case 0:
+                            processingTask.Name = newItem[i];
+                            break;
+                        case 1:
+                            processingTask.DueDate = newItem[i];
+                            break;
+                        case 2:
+                            processingTask.Description = newItem[i];
+                            break;
+                        case 3:
+                            processingTask.Priority = newItem[i];
+                            break;
+                        case 4:
+                            processingTask.Project = newItem[i];
+                            break;
+                        case 5:
+                            processingTask.Manager = newItem[i];
+                            break;
+                        case 6:
+                            processingTask.Employee = newItem[i];
+                            break;
                     }
-                    break;
-            }
-            
-            return item;
+                }
+            return processingTask;
         }
     }
 }

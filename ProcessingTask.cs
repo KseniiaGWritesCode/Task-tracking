@@ -21,20 +21,33 @@ namespace TaskTracking
         public string Employee { get; set; }
         public Coworker EmployeeFinal { get; set; }
 
+        public ProcessingTask(List<string> input)
+        {
+            if (input.Count >= 7)
+            {
+                Name = input[0];
+                DueDate = input[1];
+                Description = input[2];
+                Priority = input[3];
+                Project = input[4];
+                Manager = input[5];
+                Employee = input[6];
+            }
+        }
+
         public TaskItem TransferToTaskItem (string name, DateTime dueDate, string description, Priority priority, Project project, Coworker manager, Coworker employee)
         {
             Name = name;
-            DateTime.TryParse(DueDate, out dueDate);
+            //DateTime.TryParse(DueDate, out dueDate);
             DueDateFinal = dueDate;
             Description = description;
-            Enum.TryParse(Priority, out priority);
+            //Enum.TryParse(Priority, out priority);
             PriorityFinal = priority;
-            KeeperOfData keeperOfData = new KeeperOfData();
-            project = keeperOfData.Projects.First(p => p.Name == Name);
+            //project = KeeperOfData.Projects.First(p => p.Name == Name);
             ProjectFinal = project;
-            manager = keeperOfData.Coworkers.First(p => p.Name == Manager);
+            //manager = KeeperOfData.Coworkers.First(p => p.Name == Manager);
             ManagerFinal = manager;
-            employee = keeperOfData.Coworkers.First (p => p.Name == Employee);
+            //employee = KeeperOfData.Coworkers.First (p => p.Name == Employee);
             EmployeeFinal = employee;
 
             TaskItem taskItem = new(Name, DueDateFinal, Description, PriorityFinal, ProjectFinal, ManagerFinal, EmployeeFinal);

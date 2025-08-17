@@ -37,8 +37,9 @@ namespace TaskTracking
             return category;
         }
 
-        public bool OperationValidator<T> (Operations<T> ops)
+        public ChooseOperation OperationValidator ()
         {
+            ChooseOperation chooseOperation = new ChooseOperation();
             AnsiConsole.MarkupLine("[lightcyan1]What do you want to do - create, read, update or delete?[/]");
             while (true)
             {
@@ -49,18 +50,18 @@ namespace TaskTracking
                     continue;
                 }
 
-                if (!Enum.TryParse<ChooseOperation>(taskUserInput.Trim().ToLower(), out var operation))
+                if (!Enum.TryParse<ChooseOperation>(taskUserInput.Trim().ToLower(), out chooseOperation))
                 {
                     AnsiConsole.MarkupLine("[magenta1]Operation doesn't exhist![/]");
                     continue;
                 }
+                break;
             }
+            return chooseOperation;
         }
 
         public bool TaskValidator<T> (ProcessingTask processing)
         {
-            ProcessingTask processingTask = new ProcessingTask();
-            KeeperOfData keeperOfData = new KeeperOfData();
             string taskName;
             DateTime taskDueDate;
             string taskDescription;
@@ -71,9 +72,9 @@ namespace TaskTracking
 
             try
             {
-                if (!string.IsNullOrWhiteSpace(processingTask.Name))
+                if (!string.IsNullOrWhiteSpace(processing.Name.Trim('\'')))
                 {
-                    taskName = processingTask.Name;
+                    taskName = processing.Name;
                 }
 
                 else
@@ -81,8 +82,8 @@ namespace TaskTracking
                     AnsiConsole.MarkupLine("[magenta1]Task name is empty![/]");
                 }
 
-                if (DateTime.TryParseExact(processingTask.DueDate.Trim(), "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dueDate) ||
-                    !string.IsNullOrWhiteSpace(processingTask.DueDate))
+                if (DateTime.TryParseExact(processing.DueDate.Trim('\''), "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dueDate) ||
+                    !string.IsNullOrWhiteSpace(processing.DueDate))
                 {
                     taskDueDate = dueDate;
                 }
@@ -92,9 +93,9 @@ namespace TaskTracking
                     AnsiConsole.MarkupLine("[magenta1]Wrong fortmat of the due date, or it is empty![/]");
                 }
 
-                if (!string.IsNullOrWhiteSpace(processingTask.Description))
+                if (!string.IsNullOrWhiteSpace(processing.Description.Trim('\'')))
                 {
-                    taskDescription = processingTask.Description;
+                    taskDescription = processing.Description;
                     int countChars = 0;
                     foreach (char c in taskDescription)
                     {
@@ -111,9 +112,9 @@ namespace TaskTracking
                     AnsiConsole.MarkupLine("[magenta1]Description is empty![/]");
                 }
 
-                if (!string.IsNullOrWhiteSpace(processingTask.Priority))
+                if (!string.IsNullOrWhiteSpace(processing.Priority))
                 {
-                    if (Enum.TryParse<Priority>(processingTask.Priority, out var priority))
+                    if (Enum.TryParse<Priority>(processing.Priority.Trim('\''), ignoreCase: true, out var priority))
                         taskPriority = priority;
 
                     else
@@ -127,9 +128,9 @@ namespace TaskTracking
                     AnsiConsole.MarkupLine("[magenta1]No priority is given![/]");
                 }
 
-                if (!string.IsNullOrWhiteSpace(processingTask.Project))
+                if (!string.IsNullOrWhiteSpace(processing.Project.Trim('\'')))
                 {
-                    taskProject = keeperOfData.Projects.FirstOrDefault(p => p.Name.Equals(processingTask.Project, StringComparison.OrdinalIgnoreCase));
+                    taskProject = KeeperOfData.Projects.First(p => p.Name.Equals(processing.Project.Trim('\''), StringComparison.OrdinalIgnoreCase));
                 }
 
                 else
@@ -137,9 +138,9 @@ namespace TaskTracking
                     AnsiConsole.MarkupLine("[magenta1]No project is given![/]");
                 }
 
-                if (!string.IsNullOrWhiteSpace(processingTask.Manager))
+                if (!string.IsNullOrWhiteSpace(processing.Manager.Trim('\'')))
                 {
-                    taskManager = keeperOfData.Coworkers.FirstOrDefault(p => p.Name.Equals(processingTask.Manager, StringComparison.OrdinalIgnoreCase));
+                    taskManager = KeeperOfData.Coworkers.First(p => p.Name.Equals(processing.Manager.Trim('\''), StringComparison.OrdinalIgnoreCase));
                     if (taskManager == null)
                     {
                         AnsiConsole.MarkupLine("[magenta1]Employee doesn't exhist![/]");
@@ -155,9 +156,9 @@ namespace TaskTracking
                     AnsiConsole.MarkupLine("[magenta1]No manager is given![/]");
                 }
 
-                if (!string.IsNullOrWhiteSpace(processingTask.Employee))
+                if (!string.IsNullOrWhiteSpace(processing.Employee.Trim('\'')))
                 {
-                    taskEmployee = keeperOfData.Coworkers.FirstOrDefault(p => p.Name.Equals(processingTask.Employee, StringComparison.OrdinalIgnoreCase));
+                    taskEmployee = KeeperOfData.Coworkers.First(p => p.Name.Equals(processing.Employee.Trim('\''), StringComparison.OrdinalIgnoreCase));
                     if (taskEmployee == null)
                     {
                         AnsiConsole.MarkupLine("[magenta1]Employee doesn't exhist![/]");
@@ -167,7 +168,7 @@ namespace TaskTracking
 
             catch (Exception ex)
             {
-                AnsiConsole.MarkupLine("[magenta1]Something went wrong! Please check your inpur thoroughly and try again.[/]");
+                AnsiConsole.MarkupLine("[magenta1]Something went wrong! Please check your input thoroughly and try again.[/]");
             }
 
 
