@@ -11,10 +11,10 @@ namespace TaskTracking
         public string Name { get; set; }
         public DateTime DueDate { get; set; }
         public string Description { get; set; }
-        Priority Priority { get; set; }
-        Project Project { get; set; }
-        Coworker Manager { get; set; }
-        Coworker Employee { get; set; }
+        public Priority Priority { get; set; }
+        public Project Project { get; set; }
+        public Coworker Manager { get; set; }
+        public Coworker Employee { get; set; }
 
         public TaskItem (string name, DateTime dueDate, string description, Priority priority, Project project, Coworker manager, Coworker employee) 
         { 

@@ -13,11 +13,11 @@ namespace TaskTracking
         public string EMail { get; set; }
         public Position Position { get; set; }
 
-        public Coworker(string name, DateTime birthday, string mail, Position position) 
+        public Coworker(string name, DateTime birthday, string eMail, Position position) 
         { 
             Name = name;
             Birthday = birthday;
-            EMail = mail;
+            EMail = eMail;
             Position = position;
         }
     }

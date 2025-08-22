@@ -22,19 +22,19 @@ namespace TaskTracking
             Coworkers.Add(new Coworker("Mary Cole", DateTime.ParseExact("11.01.1992", "dd.MM.yyyy", CultureInfo.InvariantCulture), "marycole@company.com", Position.Designer));
             Coworkers.Add(new Coworker("Sarah Jessica Parker", DateTime.ParseExact("02.04.1987", "dd.MM.yyyy", CultureInfo.InvariantCulture), "sarahjessicaparker@company.com", Position.Designer));
 
-            var manager1 = Coworkers.First(c => c.Name == "John Smith");
-            var manager2 = Coworkers.First(c => c.Name == "Jane Doe");
+            var manager1 = Coworkers.FirstOrDefault(c => c.Name == "John Smith");
+            var manager2 = Coworkers.FirstOrDefault(c => c.Name == "Jane Doe");
 
-            var coworker1 = Coworkers.First(c => c.Name == "Mary Cole");
-            var coworker2 = Coworkers.First(c => c.Name == "Tom Armstrong");
-            var coworker3 = Coworkers.First(c => c.Name == "Sarah Jessica Parker");
-            var coworker4 = Coworkers.First(c => c.Name == "Matt Daemond");
+            var coworker1 = Coworkers.FirstOrDefault(c => c.Name == "Mary Cole");
+            var coworker2 = Coworkers.FirstOrDefault(c => c.Name == "Tom Armstrong");
+            var coworker3 = Coworkers.FirstOrDefault(c => c.Name == "Sarah Jessica Parker");
+            var coworker4 = Coworkers.FirstOrDefault(c => c.Name == "Matt Daemond");
 
             Projects.Add(new Project("Inhabited Mind", DateTime.ParseExact("01.02.2026", "dd.MM.yyyy", CultureInfo.InvariantCulture), "Gamifikation of the habit to envoke positiv thoughts. User is playing the role of a scientist on another planet, and must collect points by positive thoughts to communicate with the alien animals.", Priority.High, manager1));
             Projects.Add(new Project("Zweite Liebe", DateTime.ParseExact("01.08.2026", "dd.MM.yyyy", CultureInfo.InvariantCulture), "Web-shop for a young german startup, which collects and re-sells premiup second-hand fashion items.", Priority.Low, manager2));
 
-            var project1 = Projects.First(p => p.Name == "Inhabited Mind");
-            var project2 = Projects.First(p => p.Name == "Zweite Liebe");
+            var project1 = Projects.FirstOrDefault(p => p.Name == "Inhabited Mind");
+            var project2 = Projects.FirstOrDefault(p => p.Name == "Zweite Liebe");
 
             Tasks.Add(new TaskItem("UX Research", DateTime.ParseExact("01.09.2025", "dd.MM.yyyy", CultureInfo.InvariantCulture), "Make a thoroughful UX-Research for the Inhabited Mind, including user and competitors research", Priority.High, project1, manager1, coworker1));
             Tasks.Add(new TaskItem("App Back-end", DateTime.ParseExact("01.12.2025", "dd.MM.yyyy", CultureInfo.InvariantCulture), "Create all back-end for the Inhabited Mind Web App", Priority.Medium, project1, manager1, coworker2));

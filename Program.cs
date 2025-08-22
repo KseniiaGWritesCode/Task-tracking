@@ -7,10 +7,9 @@ namespace TaskTracking
     {
         static void Main(string[] args)
         {
-            AnsiConsole.MarkupLine ("[palegreen1_1]Type the name of a category first (tasks, projects or coworkers):[/]");
-
             while (true)
             {
+                AnsiConsole.MarkupLine("[palegreen1_1]Type the name of a category first (tasks, projects or coworkers):[/]");
                 AppController appController = new AppController();
             }
             
