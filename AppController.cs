@@ -150,11 +150,11 @@ namespace TaskTracking
                                 }
 
                             }
-                        }
 
-                        else
-                        {
-                            AnsiConsole.MarkupLine("[magenta1]Wrong input![/]");
+                            else
+                            {
+                                AnsiConsole.MarkupLine("[magenta1]Wrong input![/]");
+                            }
                         }
                     }
 
@@ -283,6 +283,96 @@ namespace TaskTracking
 
                     break;
 
+                case ChooseOperation.update:
+                    if (Category == Category.tasks)
+                    {
+                        AnsiConsole.MarkupLine("[darkolivegreen1]Please enter the name os the task you want to update:[/]");
+                        string taskNameInput = Console.ReadLine();
+                        var updatingTask = KeeperOfData.Tasks.FirstOrDefault(t => t.Name == taskNameInput);
+                        if (updatingTask != null)
+                        {
+                            var taskOperations = new Operations<TaskItem>(KeeperOfData.Tasks);
+                            var taskCreating = taskOperations.TaskCreate();
+                            ProcessingTask processingTask = new(taskCreating);
+                            var taskValidated = programValidator.TaskValidator<ProcessingTask>(processingTask);
+                            if (taskValidated == true)
+                            {
+                                updatingTask.Name = processingTask.Name;
+                                updatingTask.DueDate = processingTask.DueDateFinal;
+                                updatingTask.Description = processingTask.Description;
+                                updatingTask.Priority = processingTask.PriorityFinal;
+                                updatingTask.Project = processingTask.ProjectFinal;
+                                updatingTask.Manager = processingTask.ManagerFinal;
+                                updatingTask.Employee = processingTask.EmployeeFinal;
+                                SaveAndLoad<TaskItem>.SaveData(KeeperOfData.Tasks, "tasks.json");
+                                AnsiConsole.MarkupLine("[darkolivegreen1]Task successfully updated![/]");
+                            }
+                        }
+
+                        else
+                        {
+                            AnsiConsole.MarkupLine("[magenta1]Task not found![/]");
+                        }
+                    }
+
+                    if (Category == Category.projects)
+                    {
+                        AnsiConsole.MarkupLine("[darkolivegreen1]Please enter the name os the project you want to update:[/]");
+                        string projectNameInput = Console.ReadLine();
+                        var updatingProject = KeeperOfData.Projects.FirstOrDefault(t => t.Name == projectNameInput);
+                        if (updatingProject != null)
+                        {
+                            var projectOperations = new Operations<Project>(KeeperOfData.Projects);
+                            var projectCreating = projectOperations.ProjectCreate();
+                            ProcessingProject processingProject = new(projectCreating);
+                            var projectValidated = programValidator.ProjectValidator<ProcessingProject>(processingProject);
+                            if (projectValidated == true)
+                            {
+                                updatingProject.Name = processingProject.Name;
+                                updatingProject.DueDate = processingProject.DueDateFinal;
+                                updatingProject.Description = processingProject.Description;
+                                updatingProject.Priority = processingProject.PriorityFinal;
+                                updatingProject.Manager = processingProject.ManagerFinal;
+                                SaveAndLoad<Project>.SaveData(KeeperOfData.Projects, "projects.json");
+                                AnsiConsole.MarkupLine("[darkolivegreen1]Project successfully updated![/]");
+                            }
+                        }
+
+                        else
+                        {
+                            AnsiConsole.MarkupLine("[magenta1]Project not found![/]");
+                        }
+                    }
+
+                    if (Category == Category.coworkers)
+                    {
+                        AnsiConsole.MarkupLine("[darkolivegreen1]Please enter the name of the coworker you want to update:[/]");
+                        string coworkerNameInput = Console.ReadLine();
+                        var updatingCoworker= KeeperOfData.Coworkers.FirstOrDefault(t => t.Name == coworkerNameInput);
+                        if (updatingCoworker != null)
+                        {
+                            var coworkerOperations = new Operations<Coworker>(KeeperOfData.Coworkers);
+                            var coworkerUpdating = coworkerOperations.ProjectCreate();
+                            ProcessingCoworker processingCoworker = new(coworkerUpdating);
+                            var coworkerValidated = programValidator.CoworkerValidator<ProcessingCoworker>(processingCoworker);
+                            if (coworkerValidated == true)
+                            {
+                                updatingCoworker.Name = processingCoworker.Name;
+                                updatingCoworker.Birthday = processingCoworker.BirthdayFilnal;
+                                updatingCoworker.EMail = processingCoworker.EMail;
+                                updatingCoworker.Position = processingCoworker.PositionFinal;
+                                SaveAndLoad<Coworker>.SaveData(KeeperOfData.Coworkers, "coworkers.json");
+                                AnsiConsole.MarkupLine("[darkolivegreen1]Coworker successfully updated![/]");
+                            }
+                        }
+
+                        else
+                        {
+                            AnsiConsole.MarkupLine("[magenta1]Coworker not found![/]");
+                        }
+                    }
+                    break;
+
                 case ChooseOperation.delete:
                     if (Category == Category.tasks)
                     {
@@ -348,3 +438,4 @@ namespace TaskTracking
         }
     }
 }
+//'App Backend' '30.02.2026' 'Make all the backend' 'low' 'Inhabited Mind' 'John Smith' 'matt daemond'

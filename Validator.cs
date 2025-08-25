@@ -97,17 +97,7 @@ namespace TaskTracking
                 if (!string.IsNullOrWhiteSpace(processing.Name.Trim('\'')))
                 {
                     taskName = processing.Name.Trim('\'');
-                    if(!KeeperOfData.Tasks.Any(t => t.Name == taskName))
-                    {
-                        processing.Name = taskName;
-                    }
-
-                    else
-                    {
-                        AnsiConsole.MarkupLine("[magenta1]Task with such name already exhists![/]");
-                        task = false;
-                    }
-                    
+                    processing.Name = taskName;
                 }
 
                 else
@@ -116,7 +106,7 @@ namespace TaskTracking
                     task = false;
                 }
 
-                if (DateTime.TryParseExact(processing.DueDate.Trim('\''), "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dueDate) ||
+                if (DateTime.TryParseExact(processing.DueDate.Trim('\''), "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dueDate) &&
                     !string.IsNullOrWhiteSpace(processing.DueDate))
                 {
                     processing.DueDateFinal = dueDate;
@@ -236,16 +226,7 @@ namespace TaskTracking
                 if (!string.IsNullOrWhiteSpace(processing.Name.Trim('\'')))
                 {
                     projectName = processing.Name.Trim('\'');
-                    if (!KeeperOfData.Tasks.Any(t => t.Name == projectName))
-                    {
-                        processing.Name = projectName;
-                    }
-
-                    else
-                    {
-                        AnsiConsole.MarkupLine("[magenta1]Task with such name already exhists![/]");
-                        project = false;
-                    }
+                    processing.Name = projectName;
                 }
 
                 else
@@ -352,16 +333,7 @@ namespace TaskTracking
                 if (!string.IsNullOrWhiteSpace(processing.Name.Trim('\'')))
                 {
                     coworkerName = processing.Name.Trim('\'');
-                    if (!KeeperOfData.Tasks.Any(t => t.Name == coworkerName))
-                    {
-                        processing.Name = coworkerName;
-                    }
-
-                    else
-                    {
-                        AnsiConsole.MarkupLine("[magenta1]Coworker with such name already exhists![/]");
-                        coworker = false;
-                    }
+                    processing.Name = coworkerName;
                 }
 
                 else
