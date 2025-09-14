@@ -11,10 +11,14 @@ using System.Threading.Tasks;
 
 namespace TaskTracking
 {
+    // статическим сделать
     public class Validator
     {
         public Category CategoryValidator() 
         {
+            // Сделать дженерик, чтобы упростить 3 метода. Смотри подсказку внизу:
+            //      string typeName = nameof(T);
+
             Category category = new Category();
             while (true)
             {
@@ -82,6 +86,7 @@ namespace TaskTracking
             return chooseFilter;
         }
 
+        // Убрать дженерик
         public bool TaskValidator<T> (ProcessingTask processing)
         {
             bool task = true;

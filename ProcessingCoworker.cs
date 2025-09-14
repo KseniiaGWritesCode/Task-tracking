@@ -25,6 +25,8 @@ namespace TaskTracking
                 EMail = input[2];
                 Position = input[3];
             }
+
+            // выкиунть исключение если длина меньше 4
         }
 
         public Coworker TransferToCoworkerItem(string name, DateTime birthday, string eMail, Position position)

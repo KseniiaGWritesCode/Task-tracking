@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 
 namespace TaskTracking
 {
+    // - Operations сделать статиком
+    // - убрать дженерики там где не используются
     public class Operations<T>
     {
         List<T> list = new();
@@ -17,6 +19,7 @@ namespace TaskTracking
            this.list = list;
         }
 
+       
         //Create:
         public List<string> TaskCreate()
         {
@@ -24,10 +27,12 @@ namespace TaskTracking
             AnsiConsole.MarkupLine("[darkolivegreen1] 'name' 'dd.mm.yyyy (due date)' 'description' 'priority (low, medium or high)' 'project' 'manager' 'employee'[/]");
 
             string taskInput = Console.ReadLine();
+            // Переименовать в параметры задачи
             List<string> tasks = new List<string>();
 
             try
             {
+                // - TaskCreate - проверять длину списка tasks
                 var matches = Regex.Matches(taskInput, "'([^']*)'|(\\S+)");
                 foreach (Match match in matches)
                 {
@@ -36,20 +41,23 @@ namespace TaskTracking
 
                 FormingNewTask<ProcessingTask>(tasks);
             }
-
+            // - Используй ex.Message, когда перехватываешь исключение, пользователь должен понимать, что именно пошло не так
             catch (Exception ex)
             {
-                AnsiConsole.MarkupLine("[magenta1]Something went wrong![/]");
+                AnsiConsole.MarkupLine($"[magenta1]Something went wrong! Error: {ex.Message}[/]");
             }
             return tasks;
         }
 
+        
+        // дженерик лишний
         public ProcessingTask FormingNewTask<T>(List<string> newItem)
         {
             ProcessingTask processingTask = new ProcessingTask(newItem);
 
             for (int i = 0; i < newItem.Count; i++)
             {
+                // - FormingNewTask и подобные - прямая адресация к элементам листа
                 switch (i)
                 {
                     case 0:
@@ -194,6 +202,7 @@ namespace TaskTracking
             table.AddColumn("Manager");
             table.AddColumn("Employee");
 
+            // Не нужно проверять строки на нулл
             foreach (var task in tasks)
             {
                 table.AddRow(

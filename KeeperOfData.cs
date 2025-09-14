@@ -13,6 +13,10 @@ namespace TaskTracking
         public static List<TaskItem> Tasks = new List<TaskItem>();
         public static List<Project> Projects = new List<Project>();
 
+        //- TODO несмотря на то, что данных подгружаются из файлов - всё ещё создаёт кучу данных до того момента --> экстра работа + риск паразитного влияния в будущем
+		//- разбить на методы и убрать из статического конструктора.ПРоверять файлы и если не существует - использовать методы вместо загрузки из файла
+
+
         static KeeperOfData()
         {
             Coworkers.Add(new Coworker("John Smith", DateTime.ParseExact("23.04.1985", "dd.MM.yyyy", CultureInfo.InvariantCulture), "johnsmith@company.com", Position.Manager));

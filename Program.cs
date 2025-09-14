@@ -9,7 +9,9 @@ namespace TaskTracking
         {
             while (true)
             {
+                
                 AnsiConsole.MarkupLine("[palegreen1_1]Type the name of a category first (tasks, projects or coworkers):[/]");
+                // TODO Нет никакого смысле создавать при каждом запросе новый экземпляр
                 AppController appController = new AppController();
             }
             

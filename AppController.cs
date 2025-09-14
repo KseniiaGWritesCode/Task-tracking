@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 
 namespace TaskTracking
 {
+
+    // -Если класс в принципе может иметь только один экземпляр, лучше сделать его статическим
     public class AppController
     {
         Validator programValidator = new Validator();
