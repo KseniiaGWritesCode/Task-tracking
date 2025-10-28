@@ -35,7 +35,7 @@ namespace TaskTracking
             }
         }
 
-        public TaskItem TransferToTaskItem (string name, DateTime dueDate, string description, Priority priority, Project project, Coworker manager, Coworker employee)
+        public Task TransferToTaskItem (string name, DateTime dueDate, string description, Priority priority, Project project, Coworker manager, Coworker employee)
         {
             Name = name;
             DueDateFinal = dueDate;
@@ -45,7 +45,7 @@ namespace TaskTracking
             ManagerFinal = manager;
             EmployeeFinal = employee;
 
-            TaskItem taskItem = new(Name, DueDateFinal, Description, PriorityFinal, ProjectFinal, ManagerFinal, EmployeeFinal);
+            Task taskItem = new(Name, DueDateFinal, Description, PriorityFinal, ProjectFinal, ManagerFinal, EmployeeFinal);
             return taskItem;
         }
     }

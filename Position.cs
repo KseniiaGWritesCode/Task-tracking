@@ -10,6 +10,7 @@ namespace TaskTracking
     {
         Manager,
         Developer,
-        Designer
+        Designer,
+        Admin
     }
 }

@@ -8,12 +8,12 @@ namespace TaskTracking
 {
     public enum ChooseFilter
     {
-        project,
-        tasks,
-        priority,
-        coworker,
-        manager,
-        position,
-        exit
+        Project,
+        Tasks,
+        Priority,
+        Coworker,
+        Manager,
+        Position,
+        Exit
     }
 }

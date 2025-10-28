@@ -6,9 +6,8 @@ using System.Threading.Tasks;
 
 namespace TaskTracking
 {
-    public class Coworker : ICoworkers
+    public class CoworkerDTO
     {
-        public int Id { get; set; }
         public string Name { get; set; }
         public DateTime Birthday { get; set; }
         public string EMail { get; set; }

@@ -8,9 +8,9 @@ namespace TaskTracking
 {
     public enum ChooseOperation
     {
-        create,
-        read,
-        update,
-        delete
+        Create,
+        Read,
+        Update,
+        Delete
     }
 }

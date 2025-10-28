@@ -11,9 +11,9 @@ using System.Threading.Tasks;
 
 namespace TaskTracking
 {
-    public class Validator
+    public static class Validator
     {
-        public Category CategoryValidator() 
+        public static Category CategoryValidator() 
         {
             Category category = new Category();
             while (true)
@@ -26,7 +26,7 @@ namespace TaskTracking
                     continue;
                 }
 
-                if (!Enum.TryParse<Category>(categoryUserInput.Trim().ToLower(), out category))
+                if (!Enum.TryParse<Category>(categoryUserInput.Trim(), ignoreCase: true, out category))
                 {
                     AnsiConsole.MarkupLine("[magenta1]Category doesn't exhist![/]");
                     continue;
@@ -37,10 +37,10 @@ namespace TaskTracking
             return category;
         }
 
-        public ChooseOperation OperationValidator ()
+        public static ChooseOperation OperationValidator ()
         {
             ChooseOperation chooseOperation = new ChooseOperation();
-            AnsiConsole.MarkupLine("[lightcyan1]What do you want to do - create, read, update or delete?[/]");
+            
             while (true)
             {
                 string taskUserInput = Console.ReadLine();
@@ -50,7 +50,7 @@ namespace TaskTracking
                     continue;
                 }
 
-                if (!Enum.TryParse<ChooseOperation>(taskUserInput.Trim().ToLower(), out chooseOperation))
+                if (!Enum.TryParse<ChooseOperation>(taskUserInput.Trim(), ignoreCase: true, out chooseOperation))
                 {
                     AnsiConsole.MarkupLine("[magenta1]Operation doesn't exhist![/]");
                     continue;
@@ -60,7 +60,7 @@ namespace TaskTracking
             return chooseOperation;
         }
 
-        public ChooseFilter FilterValidator()
+        public static ChooseFilter FilterValidator()
         {
             ChooseFilter chooseFilter = new ChooseFilter();
             while (true)
@@ -72,7 +72,7 @@ namespace TaskTracking
                     continue;
                 }
 
-                if (!Enum.TryParse<ChooseFilter>(userInput.Trim().ToLower(), out chooseFilter))
+                if (!Enum.TryParse<ChooseFilter>(userInput.Trim(), ignoreCase: true, out chooseFilter))
                 {
                     AnsiConsole.MarkupLine("[magenta1]Filter doesn't exhist![/]");
                     continue;
@@ -82,7 +82,7 @@ namespace TaskTracking
             return chooseFilter;
         }
 
-        public bool TaskValidator<T> (ProcessingTask processing)
+        public static bool TaskValidator<T> (ProcessingTask processing)
         {
             bool task = true;
             string taskName;
@@ -213,7 +213,7 @@ namespace TaskTracking
             return task;
         }
 
-        public bool ProjectValidator<T>(ProcessingProject processing)
+        public static bool ProjectValidator<T>(ProcessingProject processing)
         {
             bool project = true;
             string projectName;
@@ -320,7 +320,7 @@ namespace TaskTracking
             return project;
         }
 
-        public bool CoworkerValidator<T>(ProcessingCoworker processing)
+        public static bool CoworkerValidator<T>(ProcessingCoworker processing)
         {
             bool coworker = true;
             string coworkerName;
@@ -405,7 +405,7 @@ namespace TaskTracking
             return coworker;
         }
 
-        public bool ProjectNameValidator(string projectName)
+        public static bool ProjectNameValidator(string projectName)
         {
             bool valid = true;
             if (!string.IsNullOrWhiteSpace(projectName.Trim()))
@@ -426,7 +426,7 @@ namespace TaskTracking
             return valid;
         }
 
-        public Priority PriorityValidator(string priority)
+        public static Priority PriorityValidator(string priority)
         {
             Priority validPriority = new Priority();
             if (!string.IsNullOrWhiteSpace(priority.Trim()))
@@ -444,7 +444,7 @@ namespace TaskTracking
             return validPriority;
         }
 
-        public Position PositionValidator(string position)
+        public static Position PositionValidator(string position)
         {
             Position validPosition = new Position();
             if (!string.IsNullOrWhiteSpace(position.Trim()))
@@ -462,7 +462,7 @@ namespace TaskTracking
             return validPosition;
         }
 
-        public bool CoworkerNameValidator(string coworkerName)
+        public static bool CoworkerNameValidator(string coworkerName)
         {
             bool valid = true;
             if (!string.IsNullOrWhiteSpace(coworkerName.Trim()))
@@ -483,7 +483,7 @@ namespace TaskTracking
             return valid;
         }
 
-        public bool TaskNameValidator(string taskName)
+        public static bool TaskNameValidator(string taskName)
         {
             bool valid = true;
             if (!string.IsNullOrWhiteSpace(taskName.Trim()))

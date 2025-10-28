@@ -181,7 +181,7 @@ namespace TaskTracking
             return processingCoworker;
         }
         //Read:
-        public void ShowListOfTasks (List<TaskItem> tasks)
+        public void ShowListOfTasks (List<Task> tasks)
         {
             var table = new Table();
             table.Title = new TableTitle("[yellow]All Tasks[/]");
