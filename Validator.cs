@@ -13,6 +13,56 @@ namespace TaskTracking
 {
     public static class Validator
     {
+        private static readonly CoworkerRepo coworkerRepo;
+        public static Coworker Login()
+        {
+            string firstInput = Console.ReadLine().Trim();
+            Commands command = new Commands();
+            if(firstInput != null)
+            {
+                if(Enum.TryParse<Commands>(firstInput, ignoreCase: true, out command)
+                    && command == Commands.Login)
+                {
+                    AnsiConsole.MarkupLine("[palegreen1_1]Enter your e-mail and password:[/]");
+                    string login = Console.ReadLine();
+                    if(login != null)
+                    {
+                        string[] checkLogin = login.Split(' ');
+                        if (checkLogin.Length == 2)
+                        {
+                            var coworker = coworkerRepo.GetCoworkerByMail(checkLogin[0]);
+                            if (coworker != null)
+                            {
+                                AnsiConsole.MarkupLine($"[lightcyan1]Welcome back,{coworker.Name}![/]");
+                                return coworker;
+                            }
+                            else
+                            {
+                                AnsiConsole.MarkupLine("[magenta1]User wasn't found. Please check your email and password carefully.[/]");
+                                return null;
+                            }
+                        }
+                        else
+                        {
+                            AnsiConsole.MarkupLine("[magenta1]Wrong input![/]");
+                            return null;
+                        }
+                    }
+                    
+                }
+                else
+                {
+                    AnsiConsole.MarkupLine("[magenta1]You must login first![/]");
+                    return null;
+                }
+            }
+            else
+            {
+                AnsiConsole.MarkupLine("[magenta1]Empty input![/]");
+                return null;
+            }
+            return null;
+        }
         public static Category CategoryValidator() 
         {
             Category category = new Category();
@@ -37,9 +87,9 @@ namespace TaskTracking
             return category;
         }
 
-        public static ChooseOperation OperationValidator ()
+        public static Commands CommandValidator ()
         {
-            ChooseOperation chooseOperation = new ChooseOperation();
+            Commands command = new Commands();
             
             while (true)
             {
@@ -50,14 +100,14 @@ namespace TaskTracking
                     continue;
                 }
 
-                if (!Enum.TryParse<ChooseOperation>(taskUserInput.Trim(), ignoreCase: true, out chooseOperation))
+                if (!Enum.TryParse<Commands>(taskUserInput.Trim(), ignoreCase: true, out command))
                 {
                     AnsiConsole.MarkupLine("[magenta1]Operation doesn't exhist![/]");
                     continue;
                 }
                 break;
             }
-            return chooseOperation;
+            return command;
         }
 
         public static ChooseFilter FilterValidator()

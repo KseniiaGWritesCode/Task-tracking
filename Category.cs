@@ -8,6 +8,9 @@ namespace TaskTracking
 {
     public enum Category
     {
+        Task,
+        Project,
+        Coworker,
         Tasks,
         Projects,
         Coworkers

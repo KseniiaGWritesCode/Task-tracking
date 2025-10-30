@@ -50,13 +50,26 @@ namespace TaskTracking
             using var command = new NpgsqlCommand(sql, connecting);
             return command;
         }
-        public Coworker? GetCoworker(string mail, string sql)
+        public Coworker? GetCoworkerByMail (string mail)
         {
-            sql = "SELECT id, name, birthday, email, position, password_hash FROM users WHERE email = @e";
+            string sql = "SELECT id, name, birthday, email, position, password_hash FROM users WHERE email = @e";
             var command = Connection(sql);
             command.Parameters.AddWithValue("e", mail);
-            using var reader = command.ExecuteReader();
+            var gettingData = CoworkerData(command);
+            return gettingData;
+        }
+        public Coworker? GetCoworkerById(int id)
+        {
+            string sql = "SELECT id, name, birthday, email, position, password_hash FROM users WHERE id = @id";
+            var command = Connection(sql);
+            command.Parameters.AddWithValue("id", id);
+            var gettingData = CoworkerData(command);
+            return gettingData;
+        }
 
+        private Coworker? CoworkerData(NpgsqlCommand command)
+        {
+            using var reader = command.ExecuteReader();
             if (reader.Read())
             {
                 return new Coworker
@@ -65,7 +78,7 @@ namespace TaskTracking
                     Name = reader.GetString(1),
                     Birthday = reader.GetDateTime(2),
                     EMail = reader.GetString(3),
-                    Position = Enum.Parse<Position>(reader.GetString(4)),
+                    Position = Enum.Parse<Position>(reader.GetString(4), ignoreCase: true),
                     Password = reader.GetString(5)
                 };
             }

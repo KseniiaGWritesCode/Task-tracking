@@ -6,17 +6,41 @@ namespace TaskTracking
     public class Program
     {
         static void Main(string[] args)
-        {   //сделай логин пользователя!
+        {
+            var table = new Table();
+            table.AddColumn("[bold yellow]Command[/]");
+            table.AddColumn("[bold yellow]Description[/]");
+            table.AddRow("[lightcyan1]Login[/]", "to login");
+            table.AddRow("[lightcyan1]Create coworker[/]", "to create a new employee profile in system");
+            table.AddRow("[lightcyan1]Create project[/]", "to create a new project");
+            table.AddRow("[lightcyan1]Create task[/]", "to form a new task inside of a project");
+            table.AddRow("[lightcyan1]Update coworker[/]", "to change information about an existing employee");
+            table.AddRow("[lightcyan1]Update project[/]", "to change information about an existing project");
+            table.AddRow("[lightcyan1]Update task[/]", "to change information about an existing task");
+            table.AddRow("[lightcyan1]Delete coworker[/]", "to delete a profile on an employee from the system");
+            table.AddRow("[lightcyan1]Delete project[/]", "to delete a project");
+            table.AddRow("[lightcyan1]Delete task[/]", "to delete a task");
+            table.AddRow("[lightcyan1]Read coworkers[/]", "to show all or filtered employee profiles");
+            table.AddRow("[lightcyan1]Read projects[/]", "to show all or filtered projects");
+            table.AddRow("[lightcyan1]Read tasks[/]", "to show all or filtered tasks");
+
             while (true)
             {
+                AnsiConsole.MarkupLine("[palegreen1_1]Hello! Please login first.[/]");
+                var loggedInEmployee = Validator.Login();
+                AnsiConsole.MarkupLine("[palegreen1_1]Choose your next action:[/]");
+                AnsiConsole.Write(table);
+
+                //продумай связку "действие - категория". Сразу проверять и действие, и категорию (как?), и имеет ли право пользователь?
+
                 AnsiConsole.MarkupLine("[palegreen1_1]Type the name of a category first (tasks, projects or coworkers):[/]");
                 var category = Validator.CategoryValidator();
                 AnsiConsole.MarkupLine("[lightcyan1]What do you want to do - create, read, update or delete?[/]");
-                var operation = Validator.OperationValidator();
+                var operation = Validator.CommandValidator();
 
                 switch(operation)
                 {
-                    case ChooseOperation.Create:
+                    case Commands.Create:
                         if(category == Category.Tasks)
                         {
                             var taskOperations = new Operations<Task>(KeeperOfData.Tasks);
@@ -72,7 +96,7 @@ namespace TaskTracking
                         }
                         break;
 
-                    case ChooseOperation.Read:
+                    case Commands.Read:
                         if (category == Category.Tasks)
                         {
                             AnsiConsole.MarkupLine("[palegreen1_1]Show all tasks or filtered?:[/]");
@@ -267,7 +291,7 @@ namespace TaskTracking
                         }
                         break;
 
-                    case ChooseOperation.Update:
+                    case Commands.Update:
                         if (category == Category.Tasks)
                         {
                             AnsiConsole.MarkupLine("[darkolivegreen1]Please enter the name os the task you want to update:[/]");
@@ -357,7 +381,7 @@ namespace TaskTracking
                         }
                         break;
 
-                    case ChooseOperation.Delete:
+                    case Commands.Delete:
                         if (category == Category.Tasks)
                         {
                             AnsiConsole.MarkupLine("[palegreen1_1]Please type the name of the task you want to delete:[/]");

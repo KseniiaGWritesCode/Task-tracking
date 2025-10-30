@@ -6,11 +6,12 @@ using System.Threading.Tasks;
 
 namespace TaskTracking
 {
-    public enum ChooseOperation
+    public enum Commands
     {
         Create,
         Read,
         Update,
-        Delete
+        Delete,
+        Login
     }
 }
