@@ -50,7 +50,31 @@ namespace TaskTracking
             using var command = new NpgsqlCommand(sql, connecting);
             return command;
         }
-        public Coworker? GetCoworkerByMail (string mail)
+        public bool CheckIfUserExists(string mail)
+        {
+            string sql = "SELECT 1 FROM users WHERE email = @e";
+            using var command = Connection(sql);
+            command.Parameters.AddWithValue("e", mail);
+            using var reader = command.ExecuteReader();
+            if (reader.Read())
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        public string GetPasswordHash(string mail)
+        {
+            string sql = "SELECT password_hash FROM users WHERE email = @e";
+            using var command = Connection(sql);
+            command.Parameters.AddWithValue("e", mail);
+
+            var result = command.ExecuteScalar();
+            return result?.ToString();
+        }
+        public Coworker? GetCoworkerByMail (string mail, string password)
         {
             string sql = "SELECT id, name, birthday, email, position, password_hash FROM users WHERE email = @e";
             var command = Connection(sql);

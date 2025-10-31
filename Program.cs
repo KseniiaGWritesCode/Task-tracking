@@ -26,19 +26,39 @@ namespace TaskTracking
 
             while (true)
             {
-                AnsiConsole.MarkupLine("[palegreen1_1]Hello! Please login first.[/]");
-                var loggedInEmployee = Validator.Login();
+                AnsiConsole.MarkupLine("[palegreen1_1]Type login to login :)[/]");
+                string login = Console.ReadLine().Trim();
+                var validatingCommand = Validator.ValidateCommand(login);
+                if(validatingCommand == Commands.Login)
+                {
+                    AnsiConsole.MarkupLine("[palegreen1_1]Enter your e-mail and password:[/]");
+                    string loggingIn = Console.ReadLine().Trim();
+                    var loggedInEmployee = Validator.ValidateLogin(loggingIn);
+                    if (loggedInEmployee != null)
+                    {
+                        AnsiConsole.MarkupLine($"[lightcyan1]Welcome back,{loggedInEmployee.Name}![/]");
+                    }
+                    else
+                    {
+                        AnsiConsole.MarkupLine("[magenta1]Please check your email and password carefully and try again.[/]");
+                    }
+                }
+                else
+                {
+                    AnsiConsole.MarkupLine("[magenta1]You must login first![/]");
+                }
+                
                 AnsiConsole.MarkupLine("[palegreen1_1]Choose your next action:[/]");
                 AnsiConsole.Write(table);
+                string action = Console.ReadLine().Trim();
 
-                //продумай связку "действие - категория". Сразу проверять и действие, и категорию (как?), и имеет ли право пользователь?
 
-                AnsiConsole.MarkupLine("[palegreen1_1]Type the name of a category first (tasks, projects or coworkers):[/]");
-                var category = Validator.CategoryValidator();
-                AnsiConsole.MarkupLine("[lightcyan1]What do you want to do - create, read, update or delete?[/]");
-                var operation = Validator.CommandValidator();
 
-                switch(operation)
+
+
+
+
+                switch (operation)
                 {
                     case Commands.Create:
                         if(category == Category.Tasks)

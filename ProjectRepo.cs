@@ -88,9 +88,9 @@ namespace TaskTracking
                 };
                 managerId = reader.GetInt32(5);
                 createdBy = reader.GetInt32(6);
-                var manager = coworkerrepo.GetCoworkerById(managerId, sql);
+                var manager = coworkerrepo.GetCoworkerById(managerId);
                 project.Manager = manager;
-                var whoCreated = coworkerrepo.GetCoworkerById(createdBy, sql);
+                var whoCreated = coworkerrepo.GetCoworkerById(createdBy);
                 project.CreatedBy = whoCreated;
             }
             return project;

@@ -8,62 +8,67 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Npgsql;
+using BCrypt.Net;
 
 namespace TaskTracking
 {
     public static class Validator
     {
         private static readonly CoworkerRepo coworkerRepo;
-        public static Coworker Login()
+        public static Coworker ValidateLogin(string login)
         {
-            string firstInput = Console.ReadLine().Trim();
             Commands command = new Commands();
-            if(firstInput != null)
+            if(login != null)
             {
-                if(Enum.TryParse<Commands>(firstInput, ignoreCase: true, out command)
-                    && command == Commands.Login)
+                string[] checkLogin = login.Split(' ');
+                if (checkLogin.Length == 2)
                 {
-                    AnsiConsole.MarkupLine("[palegreen1_1]Enter your e-mail and password:[/]");
-                    string login = Console.ReadLine();
-                    if(login != null)
+                    var existingUser = coworkerRepo.CheckIfUserExists(checkLogin[0].Trim());
+                    if (existingUser == true)
                     {
-                        string[] checkLogin = login.Split(' ');
-                        if (checkLogin.Length == 2)
+                        var passwordHash = coworkerRepo.GetPasswordHash(checkLogin[0].Trim());
+                        if (BCrypt.Net.BCrypt.Verify(checkLogin[1].Trim(), passwordHash))
                         {
-                            var coworker = coworkerRepo.GetCoworkerByMail(checkLogin[0]);
-                            if (coworker != null)
-                            {
-                                AnsiConsole.MarkupLine($"[lightcyan1]Welcome back,{coworker.Name}![/]");
-                                return coworker;
-                            }
-                            else
-                            {
-                                AnsiConsole.MarkupLine("[magenta1]User wasn't found. Please check your email and password carefully.[/]");
-                                return null;
-                            }
-                        }
-                        else
-                        {
-                            AnsiConsole.MarkupLine("[magenta1]Wrong input![/]");
-                            return null;
+                            var coworker = coworkerRepo.GetCoworkerByMail(checkLogin[0].Trim(), checkLogin[1].Trim());
+                            return coworker;
                         }
                     }
-                    
-                }
-                else
-                {
-                    AnsiConsole.MarkupLine("[magenta1]You must login first![/]");
-                    return null;
                 }
             }
             else
             {
                 AnsiConsole.MarkupLine("[magenta1]Empty input![/]");
-                return null;
             }
             return null;
         }
-        public static Category CategoryValidator() 
+
+        public static Commands? ValidateCommand(string userInput)
+        {
+            Commands command = new Commands();
+
+            if (userInput != null)
+            {
+                if (Enum.TryParse<Commands>(userInput, ignoreCase: true, out command))
+                {
+                    return command;
+                }
+                else
+                {
+                    AnsiConsole.MarkupLine("[magenta1]Operation doesn't exhist![/]");
+                }
+            }
+            else
+            {
+                AnsiConsole.MarkupLine("[magenta1]Empty input![/]");
+            }
+            return null;
+        }
+        public static void ValidateRequest()
+        {
+
+        }
+        public static Category ValidateCategory() 
         {
             Category category = new Category();
             while (true)
@@ -85,29 +90,6 @@ namespace TaskTracking
                 break;
             }
             return category;
-        }
-
-        public static Commands CommandValidator ()
-        {
-            Commands command = new Commands();
-            
-            while (true)
-            {
-                string taskUserInput = Console.ReadLine();
-                if (string.IsNullOrWhiteSpace(taskUserInput))
-                {
-                    AnsiConsole.MarkupLine("[magenta1]Empty input![/]");
-                    continue;
-                }
-
-                if (!Enum.TryParse<Commands>(taskUserInput.Trim(), ignoreCase: true, out command))
-                {
-                    AnsiConsole.MarkupLine("[magenta1]Operation doesn't exhist![/]");
-                    continue;
-                }
-                break;
-            }
-            return command;
         }
 
         public static ChooseFilter FilterValidator()
@@ -556,6 +538,36 @@ namespace TaskTracking
                 valid = false;
             }
             return valid;
+        }
+
+
+        public static void HFGh()
+        {
+            Func<string, string, (bool success, string error)> func = (arg1, arg2) =>
+            {
+                return (true, "error");
+            };
+
+            ValidateFunc((arg1, arg2) =>
+            {
+
+
+
+                return (true, "error");
+            }
+            );
+        }
+
+        public static bool ValidateFunc(Func<string, string, (bool success, string error)> func)
+        {
+            // take input from console
+            // invoke func
+            // notify user
+            // return 
+
+            var result = func.Invoke("111", "fdsf");
+
+            return result.success;
         }
     }
 }
