@@ -10,9 +10,9 @@ namespace TaskTracking
 {
     public class TaskRepo
     {
-        private readonly string _connection;
-        CoworkerRepo coworkerrepo;
-        ProjectRepo projectrepo;
+        private static string _connection = "Host=localhost;Port=5432;Database=postgres;Username=postgres;Password=ILove6Bo0bs;Include Error Detail=true;";
+        private readonly CoworkerRepo coworkerrepo = new CoworkerRepo(_connection);
+        private readonly ProjectRepo projectrepo = new ProjectRepo(_connection);
 
         public TaskRepo(string connection)
         {
@@ -37,43 +37,64 @@ namespace TaskTracking
         public void CreateTask(Task task)
         {
             string sql = "INSERT INTO tasks (name, due_date, description, priority, project_id, manager_id, coworker_id) VALUES (@name, @date, @descr, @prio, @project, @manager, @coworker)";
-            var npgsqlCommand = Connection(sql);
+            using var npgsqlCommand = Connection(sql);
             TaskDataToSql(npgsqlCommand, task);
         }
 
         private NpgsqlCommand Connection(string sql)
         {
-            using var connecting = new NpgsqlConnection(_connection);
+            var connecting = new NpgsqlConnection(_connection);
             connecting.Open();
-            using var command = new NpgsqlCommand(sql, connecting);
+            var command = new NpgsqlCommand(sql, connecting);
             return command;
         }
 
         private void TaskDataToSql(NpgsqlCommand command, Task task)
         {
+            command.Parameters.AddWithValue("id", task.Id);
             command.Parameters.AddWithValue("name", task.Name);
             command.Parameters.AddWithValue("date", task.DueDate);
             command.Parameters.AddWithValue("descr", task.Description);
             command.Parameters.AddWithValue("prio", task.Priority.ToString());
-            command.Parameters.AddWithValue("project", task.Project.Id);
-            command.Parameters.AddWithValue("manager", task.Manager.Id);
-            command.Parameters.AddWithValue("coworker", task.Employee.Id);
+            command.Parameters.AddWithValue("project", task.ProjectId);
+            command.Parameters.AddWithValue("manager", task.ManagerId);
+            command.Parameters.AddWithValue("coworker", task.EmployeeId);
             command.ExecuteNonQuery();
         }
 
-        public Task? GetTaskById(int id, string sql)
+        public Task? GetTaskById(int id)
         {
-            sql = "SELECT id, name, due_date, description, priority, project_id, manager_id, coworker_id, created_by, created_at, updated_at FROM tasks WHERE id = @id";
+            string sql = "SELECT id, name, due_date, description, priority, project_id, manager_id, coworker_id FROM tasks WHERE id = @id";
             var command = Connection(sql);
             command.Parameters.AddWithValue("id", id);
+            var gettingData = TaskData(command);
+            return gettingData;
+        }
+
+        public bool CheckIfTaskExists(int id)
+        {
+            string sql = "SELECT 1 FROM tasks WHERE id = @id";
+            using var command = Connection(sql);
+            command.Parameters.AddWithValue("id", id);
             using var reader = command.ExecuteReader();
+            if (reader.Read())
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        private Task? TaskData (NpgsqlCommand command)
+        {
             int projectId = 0;
             int managerId = 0;
             int coworkerId = 0;
-            int createdBy = 0;
-            var task = new Task(); 
+            var task = new Task();
+            using var reader = command.ExecuteReader();
 
-            if(reader.Read())
+            if (reader.Read())
             {
                 task = new Task()
                 {
@@ -82,23 +103,76 @@ namespace TaskTracking
                     DueDate = reader.GetDateTime(2),
                     Description = reader.GetString(3),
                     Priority = Enum.Parse<Priority>(reader.GetString(4)),
-                    CreatedAt = reader.GetDateTime(9),
-                    UpdatedAt = reader.GetDateTime(10)
                 };
                 projectId = reader.GetInt32(5);
                 managerId = reader.GetInt32(6);
                 coworkerId = reader.GetInt32(7);
-                createdBy = reader.GetInt32(8);
-                var project = projectrepo.GetProjectById(projectId, sql);
-                task.Project = project;
-                var manager = coworkerrepo.GetCoworkerById(managerId, sql);
-                task.Manager = manager;
-                var coworker = coworkerrepo.GetCoworkerById(coworkerId, sql);
-                task.Employee = coworker;
-                var whoCreated = coworkerrepo.GetCoworkerById(createdBy, sql);
-                task.CreatedBy = whoCreated;
+                var project = projectrepo.GetProjectById(projectId);
+                task.ProjectId = project.Id;
+                var manager = coworkerrepo.GetCoworkerById(managerId);
+                task.ManagerId = manager.Id;
+                var coworker = coworkerrepo.GetCoworkerById(coworkerId);
+                task.EmployeeId = coworker.Id;
             }
             return task;
+        }
+        private List<TaskDTO> AllTasksData(NpgsqlCommand command)
+        {
+            List<TaskDTO> taskDTOs = new List<TaskDTO>();
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                taskDTOs.Add(new TaskDTO()
+                {
+                    Id = reader.GetInt32(0),
+                    Name = reader.GetString(1),
+                    DueDate = reader.GetDateTime(2),
+                    Description = reader.GetString(3),
+                    Priority = Enum.Parse<Priority>(reader.GetString(4), ignoreCase: true),
+                    ProjectId = reader.GetInt32(5),
+                    ManagerId = reader.GetInt32(6),
+                    EmployeeId = reader.GetInt32(7)
+                });
+            }
+            return taskDTOs;
+        }
+        public List<TaskDTO> GetAllTasks()
+        {
+            List<TaskDTO> list = new List<TaskDTO>();
+            string sql = "SELECT * FROM tasks";
+            using var command = Connection(sql);
+            list = AllTasksData(command);
+            return list;
+        }
+        public List<TaskDTO> GetFilteredTasks(Dictionary<FilterOptions, string> filters)
+        {
+            List<TaskDTO> list = new List<TaskDTO>();
+            List<string> foundFilters = new List<string>();
+            List<NpgsqlParameter> foundValues = new List<NpgsqlParameter>();
+
+            foreach (var f in filters)
+            {
+                if (f.Key == FilterOptions.Coworker)
+                {
+                    foundFilters.Add("(manager_id = @coworkerId OR coworker_id = @coworkerId)");
+                    foundValues.Add(new NpgsqlParameter("coworkerId", int.Parse(f.Value)));
+                }
+                if (f.Key == FilterOptions.Priority)
+                {
+                    foundFilters.Add("LOWER(priority) = LOWER(@priority)");
+                    foundValues.Add(new NpgsqlParameter("priority", f.Value));
+                }
+                if (f.Key == FilterOptions.Project)
+                {
+                    foundFilters.Add("project_id = @projectid");
+                    foundValues.Add(new NpgsqlParameter("projectid", f.Value));
+                }
+            }
+            string sql = "SELECT * FROM tasks" + " WHERE " + string.Join(" AND ", foundFilters);
+            using var command = Connection(sql);
+            command.Parameters.AddRange(foundValues.ToArray());
+            list = AllTasksData(command);
+            return list;
         }
     }
 }

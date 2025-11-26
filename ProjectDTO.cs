@@ -8,10 +8,11 @@ namespace TaskTracking
 {
     public class ProjectDTO
     {
+        public int Id { get; set; }
         public string Name { get; set; }
         public DateTime DueDate { get; set; }
         public string Description { get; set; }
         public Priority Priority { get; set; }
-        public Coworker Manager { get; set; }
+        public int ManagerId { get; set; }
     }
 }

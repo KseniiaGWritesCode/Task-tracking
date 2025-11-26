@@ -6,14 +6,11 @@ using System.Threading.Tasks;
 
 namespace TaskTracking
 {
-    public enum ChooseFilter
+    public enum FilterOptions
     {
         Project,
-        Tasks,
         Priority,
         Coworker,
-        Manager,
-        Position,
-        Exit
+        Position
     }
 }

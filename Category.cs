@@ -11,8 +11,8 @@ namespace TaskTracking
         Task,
         Project,
         Coworker,
+        Coworkers,
         Tasks,
-        Projects,
-        Coworkers
+        Projects
     }
 }

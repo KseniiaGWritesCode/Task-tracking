@@ -9,6 +9,7 @@ namespace TaskTracking
     public enum Commands
     {
         Create,
+        ReadAll,
         Read,
         Update,
         Delete,

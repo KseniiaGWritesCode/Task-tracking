@@ -1,573 +1,374 @@
-﻿using Microsoft.VisualBasic;
+﻿using BCrypt.Net;
+using Microsoft.VisualBasic;
+using Npgsql;
 using Spectre.Console;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Npgsql;
-using BCrypt.Net;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace TaskTracking
 {
     public static class Validator
     {
-        private static readonly CoworkerRepo coworkerRepo;
-        public static Coworker ValidateLogin(string login)
+        private static string connection = "Host=localhost;Port=5432;Database=postgres;Username=postgres;Password=ILove6Bo0bs;Include Error Detail=true;";
+        private static readonly CoworkerRepo coworkerRepo = new CoworkerRepo(connection);
+        private static readonly ProjectRepo projectRepo = new ProjectRepo(connection);
+        private static readonly TaskRepo taskRepo = new TaskRepo(connection);
+
+        //validators before input of values:
+        public static Coworker? ValidateLogin(string login)
         {
-            Commands command = new Commands();
+            Coworker coworker = new Coworker();
             if(login != null)
             {
-                string[] checkLogin = login.Split(' ');
-                if (checkLogin.Length == 2)
+                string[] checkLogin = login.Split();
+                if(checkLogin.Length != 2)
                 {
-                    var existingUser = coworkerRepo.CheckIfUserExists(checkLogin[0].Trim());
-                    if (existingUser == true)
+                    ValidationResult.Failure("Not all the required data are in the list.");
+                }
+                
+                var existingUser = coworkerRepo.CheckIfUserExists(checkLogin[0].Trim());
+                if (existingUser)
+                {
+                    var passwordHash = coworkerRepo.GetPasswordHash(checkLogin[0].Trim());
+                    if (BCrypt.Net.BCrypt.Verify(checkLogin[1].Trim(), passwordHash))
                     {
-                        var passwordHash = coworkerRepo.GetPasswordHash(checkLogin[0].Trim());
-                        if (BCrypt.Net.BCrypt.Verify(checkLogin[1].Trim(), passwordHash))
-                        {
-                            var coworker = coworkerRepo.GetCoworkerByMail(checkLogin[0].Trim(), checkLogin[1].Trim());
-                            return coworker;
-                        }
+                        coworker = coworkerRepo.GetCoworkerByMail(checkLogin[0].Trim());
+                        return coworker;
                     }
                 }
             }
-            else
-            {
-                AnsiConsole.MarkupLine("[magenta1]Empty input![/]");
-            }
             return null;
         }
-
         public static Commands? ValidateCommand(string userInput)
         {
             Commands command = new Commands();
 
             if (userInput != null)
             {
-                if (Enum.TryParse<Commands>(userInput, ignoreCase: true, out command))
-                {
-                    return command;
-                }
-                else
-                {
-                    AnsiConsole.MarkupLine("[magenta1]Operation doesn't exhist![/]");
-                }
+                return Enum.TryParse<Commands>(userInput, ignoreCase: true, out command) ?command : null;
+                
             }
-            else
-            {
-                AnsiConsole.MarkupLine("[magenta1]Empty input![/]");
-            }
-            return null;
+            return command;
         }
-        public static void ValidateRequest()
-        {
-
-        }
-        public static Category ValidateCategory() 
+        public static Category? ValidateCategory(string input) 
         {
             Category category = new Category();
-            while (true)
+            if (input != null)
             {
-                string categoryUserInput = Console.ReadLine();
-
-                if (string.IsNullOrWhiteSpace(categoryUserInput))
-                {
-                    AnsiConsole.MarkupLine("[magenta1]Empty input![/]");
-                    continue;
-                }
-
-                if (!Enum.TryParse<Category>(categoryUserInput.Trim(), ignoreCase: true, out category))
-                {
-                    AnsiConsole.MarkupLine("[magenta1]Category doesn't exhist![/]");
-                    continue;
-                }
-
-                break;
+                return Enum.TryParse<Category>(input.Trim(), ignoreCase: true, out category) ? category : null;
             }
             return category;
         }
-
-        public static ChooseFilter FilterValidator()
+        public static bool ValidateAccess(Category? category, Coworker? coworker)
         {
-            ChooseFilter chooseFilter = new ChooseFilter();
-            while (true)
+            switch(category)
             {
-                string userInput = Console.ReadLine();
-                if (string.IsNullOrWhiteSpace(userInput))
-                {
-                    AnsiConsole.MarkupLine("[magenta1]Empty input![/]");
-                    continue;
-                }
-
-                if (!Enum.TryParse<ChooseFilter>(userInput.Trim(), ignoreCase: true, out chooseFilter))
-                {
-                    AnsiConsole.MarkupLine("[magenta1]Filter doesn't exhist![/]");
-                    continue;
-                }
-                break;
-            }
-            return chooseFilter;
-        }
-
-        public static bool TaskValidator<T> (ProcessingTask processing)
-        {
-            bool task = true;
-            string taskName;
-            string taskDescription;
-            Priority taskPriority;
-            Project taskProject;
-            Coworker taskManager;
-            Coworker taskEmployee;
-
-            try
-            {
-                if (!string.IsNullOrWhiteSpace(processing.Name.Trim('\'')))
-                {
-                    taskName = processing.Name.Trim('\'');
-                    processing.Name = taskName;
-                }
-
-                else
-                {
-                    AnsiConsole.MarkupLine("[magenta1]Task name is empty![/]");
-                    task = false;
-                }
-
-                if (DateTime.TryParseExact(processing.DueDate.Trim('\''), "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dueDate) &&
-                    !string.IsNullOrWhiteSpace(processing.DueDate))
-                {
-                    processing.DueDateFinal = dueDate;
-                }
-
-                else
-                {
-                    AnsiConsole.MarkupLine("[magenta1]Wrong fortmat of the due date, or it is empty![/]");
-                    task = false;
-                }
-
-                if (!string.IsNullOrWhiteSpace(processing.Description.Trim('\'')))
-                {
-                    taskDescription = processing.Description.Trim('\'');
-                    int countChars = 0;
-                    foreach (char c in taskDescription)
-                    {
-                        countChars++;
-                    }
-                    if (countChars < 10)
-                    {
-                        AnsiConsole.MarkupLine("[magenta1]The description should be at least 10 characters long, you lazy jerk![/]");
-                        task = false;
-                    }
-
-                    processing.Description = taskDescription;
-                }
-
-                else
-                {
-                    AnsiConsole.MarkupLine("[magenta1]Description is empty![/]");
-                    task = false;
-                }
-
-                if (!string.IsNullOrWhiteSpace(processing.Priority))
-                {
-                    if (Enum.TryParse<Priority>(processing.Priority.Trim('\''), ignoreCase: true, out var priority))
-                        processing.PriorityFinal = priority;
-
-                    else
-                    {
-                        AnsiConsole.MarkupLine("[magenta1]Wrong priority![/]");
-                        task = false;
-                    }
-                }
-
-                else
-                {
-                    AnsiConsole.MarkupLine("[magenta1]No priority is given![/]");
-                    task = false;
-                }
-
-                if (!string.IsNullOrWhiteSpace(processing.Project.Trim('\'')))
-                {
-                    processing.ProjectFinal = KeeperOfData.Projects.FirstOrDefault(p => p.Name.Equals(processing.Project.Trim('\''), StringComparison.OrdinalIgnoreCase));
-                }
-
-                else
-                {
-                    AnsiConsole.MarkupLine("[magenta1]No project is given![/]");
-                    task = false;
-                }
-
-                if (!string.IsNullOrWhiteSpace(processing.Manager.Trim('\'')))
-                {
-                    taskManager = KeeperOfData.Coworkers.FirstOrDefault(p => p.Name.Equals(processing.Manager.Trim('\''), StringComparison.OrdinalIgnoreCase));
-                    if (taskManager == null)
-                    {
-                        AnsiConsole.MarkupLine("[magenta1]Employee doesn't exhist![/]");
-                        task = false;
-                    }
-                    if (taskManager.Position != Position.Manager)
-                    {
-                        AnsiConsole.MarkupLine("[magenta1]This employee can't be manager yet![/]");
-                        task = false;
-                    }
-                    processing.ManagerFinal = taskManager;
-                }
-
-                else
-                {
-                    AnsiConsole.MarkupLine("[magenta1]No manager is given![/]");
-                    task = false;
-                }
-
-                if (!string.IsNullOrWhiteSpace(processing.Employee.Trim('\'')))
-                {
-                    taskEmployee = KeeperOfData.Coworkers.FirstOrDefault(p => p.Name.Equals(processing.Employee.Trim('\''), StringComparison.OrdinalIgnoreCase));
-                    if (taskEmployee == null)
-                    {
-                        AnsiConsole.MarkupLine("[magenta1]Employee doesn't exhist![/]");
-                        task = false;
-                    }
-                    processing.EmployeeFinal = taskEmployee;
-                }
-            }
-
-            catch (Exception ex)
-            {
-                AnsiConsole.MarkupLine("[magenta1]Something went wrong! Please check your input thoroughly and try again.[/]");
-                task = false;
-            }
-
-            return task;
-        }
-
-        public static bool ProjectValidator<T>(ProcessingProject processing)
-        {
-            bool project = true;
-            string projectName;
-            string projectDescription;
-            Priority projectPriority;
-            Coworker projectManager;
-
-            try
-            {
-                if (!string.IsNullOrWhiteSpace(processing.Name.Trim('\'')))
-                {
-                    projectName = processing.Name.Trim('\'');
-                    processing.Name = projectName;
-                }
-
-                else
-                {
-                    AnsiConsole.MarkupLine("[magenta1]Project name is empty![/]");
-                    project = false;
-                }
-
-                if (DateTime.TryParseExact(processing.DueDate.Trim('\''), "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dueDate) ||
-                    !string.IsNullOrWhiteSpace(processing.DueDate))
-                {
-                    processing.DueDateFinal = dueDate;
-                }
-
-                else
-                {
-                    AnsiConsole.MarkupLine("[magenta1]Wrong fortmat of the due date, or it is empty![/]");
-                    project = false;
-                }
-
-                if (!string.IsNullOrWhiteSpace(processing.Description.Trim('\'')))
-                {
-                    projectDescription = processing.Description.Trim('\'');
-                    int countChars = 0;
-                    foreach (char c in projectDescription)
-                    {
-                        countChars++;
-                    }
-                    if (countChars < 10)
-                    {
-                        AnsiConsole.MarkupLine("[magenta1]The description should be at least 10 characters long, you lazy jerk![/]");
-                        project = false;
-                    }
-
-                    processing.Description = projectDescription;
-                }
-
-                else
-                {
-                    AnsiConsole.MarkupLine("[magenta1]Description is empty![/]");
-                    project = false;
-                }
-
-                if (!string.IsNullOrWhiteSpace(processing.Priority))
-                {
-                    if (Enum.TryParse<Priority>(processing.Priority.Trim('\''), ignoreCase: true, out var priority))
-                        processing.PriorityFinal = priority;
-
-                    else
-                    {
-                        AnsiConsole.MarkupLine("[magenta1]Wrong priority![/]");
-                        project = false;
-                    }
-                }
-
-                else
-                {
-                    AnsiConsole.MarkupLine("[magenta1]No priority is given![/]");
-                    project = false;
-                }
-
-                if (!string.IsNullOrWhiteSpace(processing.Manager.Trim('\'')))
-                {
-                    projectManager = KeeperOfData.Coworkers.FirstOrDefault(p => p.Name.Equals(processing.Manager.Trim('\''), StringComparison.OrdinalIgnoreCase));
-                    if (projectManager == null)
-                    {
-                        AnsiConsole.MarkupLine("[magenta1]Employee doesn't exhist![/]");
-                        project = false;
-                    }
-                    if (projectManager.Position != Position.Manager)
-                    {
-                        AnsiConsole.MarkupLine("[magenta1]This employee can't be manager yet![/]");
-                        project = false;
-                    }
-                    processing.ManagerFinal = projectManager;
-                }
-
-                else
-                {
-                    AnsiConsole.MarkupLine("[magenta1]No manager is given![/]");
-                    project = false;
-                }
-            }
-
-            catch (Exception ex)
-            {
-                AnsiConsole.MarkupLine("[magenta1]Something went wrong! Please check your input thoroughly and try again.[/]");
-                project = false;
-            }
-
-            return project;
-        }
-
-        public static bool CoworkerValidator<T>(ProcessingCoworker processing)
-        {
-            bool coworker = true;
-            string coworkerName;
-            string coworkerBirthday;
-            string coworkerEmail;
-            Position coworkerPosition;
-
-            try
-            {
-                if (!string.IsNullOrWhiteSpace(processing.Name.Trim('\'')))
-                {
-                    coworkerName = processing.Name.Trim('\'');
-                    processing.Name = coworkerName;
-                }
-
-                else
-                {
-                    AnsiConsole.MarkupLine("[magenta1]Coworker name is empty![/]");
-                    coworker = false;
-                }
-
-                if (DateTime.TryParseExact(processing.Birthday.Trim('\''), "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime birthday) ||
-                    !string.IsNullOrWhiteSpace(processing.Birthday))
-                {
-                    processing.BirthdayFilnal = birthday;
-                }
-
-                else
-                {
-                    AnsiConsole.MarkupLine("[magenta1]Wrong fortmat of birthday, or it is empty![/]");
-                    coworker = false;
-                }
-
-                if (!string.IsNullOrWhiteSpace(processing.EMail.Trim('\'')))
-                {
-                    coworkerEmail = processing.EMail.Trim('\'');
-                    int countChars = 0;
-                    foreach (char c in coworkerEmail)
-                    {
-                        countChars++;
-                    }
-                    if (countChars < 5)
-                    {
-                        AnsiConsole.MarkupLine("[magenta1]The e-mail is too short![/]");
-                        coworker = false;
-                    }
-
-                    processing.EMail = coworkerEmail;
-                }
-
-                else
-                {
-                    AnsiConsole.MarkupLine("[magenta1]E-mail is empty![/]");
-                    coworker = false;
-                }
-
-                if (!string.IsNullOrWhiteSpace(processing.Position))
-                {
-                    if (Enum.TryParse<Position>(processing.Position.Trim('\''), ignoreCase: true, out var position))
-                        processing.PositionFinal = position;
-
-                    else
-                    {
-                        AnsiConsole.MarkupLine("[magenta1]Wrong position![/]");
-                        coworker = false;
-                    }
-                }
-
-                else
-                {
-                    AnsiConsole.MarkupLine("[magenta1]No position is given![/]");
-                    coworker = false;
-                }
-            }
-
-            catch (Exception ex)
-            {
-                AnsiConsole.MarkupLine("[magenta1]Something went wrong! Please check your input thoroughly and try again.[/]");
-                coworker = false;
-            }
-
-            return coworker;
-        }
-
-        public static bool ProjectNameValidator(string projectName)
-        {
-            bool valid = true;
-            if (!string.IsNullOrWhiteSpace(projectName.Trim()))
-            {
-                var validProject = KeeperOfData.Projects.FirstOrDefault(p => p.Name.Equals(projectName.Trim(), StringComparison.OrdinalIgnoreCase));
-                if (validProject == null)
-                {
-                    AnsiConsole.MarkupLine("[magenta1]Project doesn't exhist![/]");
-                    valid = false;
-                }
-            }
-
-            else
-            {
-                AnsiConsole.MarkupLine("[magenta1]No project is given![/]");
-                valid = false;
-            }
-            return valid;
-        }
-
-        public static Priority PriorityValidator(string priority)
-        {
-            Priority validPriority = new Priority();
-            if (!string.IsNullOrWhiteSpace(priority.Trim()))
-            {
-                if (!Enum.TryParse<Priority>(priority.Trim(), ignoreCase: true, out validPriority))
-                {
-                    AnsiConsole.MarkupLine("[magenta1]Wrong priority![/]");
-                }
-            }
-
-            else
-            {
-                AnsiConsole.MarkupLine("[magenta1]Empty input![/]");
-            }
-            return validPriority;
-        }
-
-        public static Position PositionValidator(string position)
-        {
-            Position validPosition = new Position();
-            if (!string.IsNullOrWhiteSpace(position.Trim()))
-            {
-                if (!Enum.TryParse<Position>(position.Trim(), ignoreCase: true, out validPosition))
-                {
-                    AnsiConsole.MarkupLine("[magenta1]Wrong position![/]");
-                }
-            }
-
-            else
-            {
-                AnsiConsole.MarkupLine("[magenta1]Empty input![/]");
-            }
-            return validPosition;
-        }
-
-        public static bool CoworkerNameValidator(string coworkerName)
-        {
-            bool valid = true;
-            if (!string.IsNullOrWhiteSpace(coworkerName.Trim()))
-            {
-                var validCoworker = KeeperOfData.Coworkers.FirstOrDefault(p => p.Name.Equals(coworkerName.Trim(), StringComparison.OrdinalIgnoreCase));
-                if (validCoworker == null)
-                {
-                    AnsiConsole.MarkupLine("[magenta1]Coworker doesn't exhist![/]");
-                    valid = false;
-                }
-            }
-
-            else
-            {
-                AnsiConsole.MarkupLine("[magenta1]No coworker name is given![/]");
-                valid = false;
-            }
-            return valid;
-        }
-
-        public static bool TaskNameValidator(string taskName)
-        {
-            bool valid = true;
-            if (!string.IsNullOrWhiteSpace(taskName.Trim()))
-            {
-                if (KeeperOfData.Tasks.Any(t => t.Name == taskName.Trim()))
-                {
-                    valid = true;
-                }
-
-                else
-                {
-                    AnsiConsole.MarkupLine("[magenta1]No task with such name![/]");
-                    valid = false;
-                }
-            }
-
-            else
-            {
-                AnsiConsole.MarkupLine("[magenta1]Task name is empty![/]");
-                valid = false;
-            }
-            return valid;
-        }
-
-
-        public static void HFGh()
-        {
-            Func<string, string, (bool success, string error)> func = (arg1, arg2) =>
-            {
-                return (true, "error");
+                case Category.Coworker:
+                    return coworker.Position == Position.Admin;
+                case Category.Project:
+                    return coworker.Position == Position.Admin ||
+                           coworker.Position == Position.Manager;
+                default:
+                    return true;
             };
-
-            ValidateFunc((arg1, arg2) =>
-            {
-
-
-
-                return (true, "error");
-            }
-            );
         }
 
-        public static bool ValidateFunc(Func<string, string, (bool success, string error)> func)
+        //validators for each property: 
+        private static ValidationResult OnlyNumbersValidator(string id)
         {
-            // take input from console
-            // invoke func
-            // notify user
-            // return 
-
-            var result = func.Invoke("111", "fdsf");
-
-            return result.success;
+            if(!int.TryParse(id, out int result))
+            {
+                ValidationResult.Failure("IDs are only numbers!");
+            }
+            return new ValidationResult(true);
         }
+        private static ValidationResult OnlyTextValidator(string text)
+        {
+            if (!text.All(char.IsLetter))
+            {
+                ValidationResult.Failure("This field must contain only text!");
+            }
+            return new ValidationResult(true);
+        }
+        private static ValidationResult DescriptionValidator(string description)
+        {
+            if(description.Length < 10)
+            {
+                ValidationResult.Failure("Description must be at least 10 characters long!");
+            }
+            return new ValidationResult(true);
+        }
+        private static ValidationResult NotEmptyFieldValidator(string input)
+        {
+            if(!input.Any(char.IsLetterOrDigit))
+            {
+                ValidationResult.Failure("Invalid name format!");
+            }
+            return new ValidationResult(true);
+        }
+        public static ValidationResult EmailValidator(string name)
+        {
+            if (name.Length < 5
+                    || !name.Contains('.')
+                    || !name.Contains('@'))
+            {
+                ValidationResult.Failure("The e-mail has invalid format!");
+            }
+            return new ValidationResult(true);
+        }
+        private static ValidationResult PasswordValidator(string password)
+        {
+            if (password.Length < 8
+                    || !password.Any(char.IsLetter)
+                    || !password.Any(char.IsDigit)
+                    || !password.Any(char.IsUpper)
+                    || !password.Any(ch => char.IsSymbol(ch) || char.IsPunctuation(ch)))
+            {
+               ValidationResult.Failure("Password must contain at least: 8 characters, 1 digit, 1 upper-case letter and 1 symbol.");
+            }
+            return new ValidationResult(true);
+        }
+        public static ValidationResult PositionValidator(string position)
+        {
+            if (!Enum.TryParse<Position>(position, ignoreCase: true, out var validPosition))
+            {
+                ValidationResult.Failure("Position not found.");
+            }
+            return new ValidationResult(true);
+        }
+        public static ValidationResult PriorityValidator(string priority)
+        {
+            if (!Enum.TryParse<Priority>(priority, ignoreCase: true, out var validPriority))
+            {
+                ValidationResult.Failure("Priority not found.");
+            }
+            return new ValidationResult(true);
+        }
+        public static ValidationResult DateTimeValidator(string date)
+        {
+            if (!DateTime.TryParseExact(date, "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime validDate))
+            {
+                ValidationResult.Failure("Date format isn't correct");
+            }
+            return new ValidationResult(true);
+        }
+        public static ValidationResult ManagerValidator(string input)
+        {
+            if (!coworkerRepo.CheckIfUserExists(input))
+            {
+                ValidationResult.Failure("No user with this e-mail!");
+            }
+            if (coworkerRepo.GetCoworkerById(int.Parse(input)).Position != Position.Manager)
+            {
+                ValidationResult.Failure("This employee isn't a manager!");
+            }
+            return new ValidationResult(true);
+        }
+        public static ValidationResult CoworkerValidator(string email)
+        {
+            if (!coworkerRepo.CheckIfUserExists(email))
+            {
+                ValidationResult.Failure("No user with this e-mail!");
+            }
+            return new ValidationResult(true);
+        }
+        public static ValidationResult ProjectValidator(string id)
+        {
+            int iD = 0;
+            int.TryParse(id, out iD);
+            if (!projectRepo.CheckIfProjectExists(iD))
+            {
+                ValidationResult.Failure("No project with this ID!");
+            }
+            return new ValidationResult(true);
+        }
+        private static bool ReturnValidationResult(List<ValidationResult> results)
+        {
+            foreach (var error in results.Where(r => !r.IsValid))
+            {
+                AnsiConsole.MarkupLine($"[red]{error.ErrorMessage}[/]");
+            }
+            return results.All(r => r.IsValid);
+        }
+        private static void ValidateIfNotEmpty(string input, List<ValidationResult> results, Func<string, ValidationResult> validator)
+        {
+            if(!string.IsNullOrEmpty(input))
+            {
+                results.Add(validator(input));
+            }
+            else
+            {
+                results.Add(ValidationResult.Success());
+            }
+        }
+
+        //validating input of values for actions:
+        public static bool ValidateNewCoworkerData(List<string> data)
+        {
+            var results = new List<ValidationResult>();
+            if (data.Count != 5)
+            {
+                ValidationResult.Failure("Not all the required data are in the list.");
+                return false;
+            }
+
+            results.Add(OnlyTextValidator(data[0]));
+            results.Add(DateTimeValidator(data[1]));
+            results.Add(EmailValidator(data[2]));
+            results.Add(PositionValidator(data[3]));
+            results.Add(PasswordValidator(data[4]));
+
+            return ReturnValidationResult(results);
+        }
+        public static bool ValidateNewProjectData(List<string> data)
+        {
+            var results = new List<ValidationResult>();
+            if (data.Count != 5)
+            {
+                ValidationResult.Failure("Not all the required data are in the list.");
+                return false;
+            }
+
+            results.Add(NotEmptyFieldValidator(data[0]));
+            results.Add(DateTimeValidator(data[1]));
+            results.Add(DescriptionValidator(data[2])); 
+            results.Add(PriorityValidator(data[3]));
+            results.Add(ManagerValidator(data[4]));
+
+            return ReturnValidationResult(results);
+        }
+        public static bool ValidateNewTaskData(List<string> data)
+        {
+            var results = new List<ValidationResult>();
+            if (data.Count != 7)
+            {
+                ValidationResult.Failure("Not all the required data are in the list.");
+                return false;
+            }
+
+            results.Add(NotEmptyFieldValidator(data[0]));
+            results.Add(DateTimeValidator(data[1]));
+            results.Add(DescriptionValidator(data[2]));
+            results.Add(PriorityValidator(data[3]));
+            results.Add(ProjectValidator(data[4]));
+            results.Add(ManagerValidator(data[5]));
+            results.Add(CoworkerValidator(data[6]));
+
+            return ReturnValidationResult(results);
+        }
+        public static bool ValidateUpdateCoworker(List<string> data)
+        {
+            var results = new List<ValidationResult>();
+            if(data.Count != 6)
+            {
+                ValidationResult.Failure("Not all the required data are in the list.");
+            }
+
+            results.Add(OnlyNumbersValidator(data[0]));
+            ValidateIfNotEmpty(data[1], results, OnlyTextValidator);
+            ValidateIfNotEmpty(data[2], results, DateTimeValidator);
+            ValidateIfNotEmpty(data[3], results, EmailValidator);
+            ValidateIfNotEmpty(data[4], results, PositionValidator);
+            results.Add(PasswordValidator(data[5]));
+
+            return ReturnValidationResult(results);
+        }
+        public static bool ValidateUpdateProject(List<string> data)
+        {
+            var results = new List<ValidationResult>();
+            if(data.Count != 6)
+            {
+                ValidationResult.Failure("Not all the required data are in the list.");
+            }
+
+            results.Add(OnlyNumbersValidator(data[0]));
+            ValidateIfNotEmpty(data[1], results, NotEmptyFieldValidator);
+            ValidateIfNotEmpty(data[2], results, DateTimeValidator);
+            ValidateIfNotEmpty(data[3], results, DescriptionValidator);
+            ValidateIfNotEmpty(data[4], results, PriorityValidator);
+            ValidateIfNotEmpty(data[5], results, ManagerValidator);
+
+            return ReturnValidationResult(results);
+        }
+        public static bool ValidateUpdateTask(List<string> data)
+        {
+            var results = new List<ValidationResult>();
+            if (data.Count != 8)
+            {
+                ValidationResult.Failure("Not all the required data are in the list.");
+            }
+
+            results.Add(OnlyNumbersValidator(data[0]));
+            ValidateIfNotEmpty(data[1], results, NotEmptyFieldValidator);
+            ValidateIfNotEmpty(data[2], results, DateTimeValidator);
+            ValidateIfNotEmpty(data[3], results, DescriptionValidator);
+            ValidateIfNotEmpty(data[4], results, PriorityValidator);
+            ValidateIfNotEmpty(data[5], results, ProjectValidator);
+            ValidateIfNotEmpty(data[6], results, ManagerValidator);
+            ValidateIfNotEmpty(data[7], results, CoworkerValidator);
+
+            return ReturnValidationResult(results);
+        }
+        public static bool ValidateDeleteCoworker(List<string> data)
+        {
+            bool exists = true;
+            Coworker coworker = null;
+            string result = string.Join(" ", data);
+
+            coworker = ValidateLogin(result);
+            if (coworker == null)
+            {
+                ValidationResult.Failure("Coworker not found.");
+                exists = false;
+            }
+            return exists;
+        }
+        public static bool ValidateDeleteProject(List<string> data)
+        {
+            bool exists = true;
+            string input = data[0].Trim('\'');
+            int id = int.Parse(input);
+            exists = projectRepo.CheckIfProjectExists(id);
+            if(exists == false)
+            {
+                ValidationResult.Failure("Project not found.");
+                return false;
+            }
+            return exists;
+        }
+        public static bool ValidateDeleteTask(List<string> data)
+        {
+            bool exists = true;
+            string input = data[0].Trim('\'');
+            int id = int.Parse(input);
+            exists = taskRepo.CheckIfTaskExists(id);
+            if (exists == false)
+            {
+                ValidationResult.Failure("Task not found.");
+            }
+            return exists;
+        }
+        public static bool ValidateRead(List<string> data)
+        {
+            FilterOptions filterOptions = new FilterOptions();
+            var results = new List<ValidationResult>();
+            foreach (string input in data)
+            {
+                if (!Enum.TryParse<FilterOptions>(input, ignoreCase: true, out filterOptions))
+                {
+                    ValidationResult.Failure("Filter option not found.");
+                }
+            }
+            return ReturnValidationResult(results);
+        }
+        
     }
 }
