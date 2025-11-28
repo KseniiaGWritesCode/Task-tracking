@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace TaskTracking
 {
+    // TODO Все енамы с большой буквы
     public enum Category
     {
         Task,
