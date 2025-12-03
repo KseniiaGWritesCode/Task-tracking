@@ -10,7 +10,7 @@ namespace TaskTracking
 {
     public class TaskRepo
     {
-        private static string _connection = "Host=localhost;Port=5432;Database=postgres;Username=postgres;Password=ILove6Bo0bs;Include Error Detail=true;";
+        private static string _connection = "Host=localhost;Port=5432;Database=TaskTracking;Username=postgres;Password=ILove6Bo0bs;Include Error Detail=true;";
         private readonly CoworkerRepo coworkerrepo = new CoworkerRepo(_connection);
         private readonly ProjectRepo projectrepo = new ProjectRepo(_connection);
 
