@@ -4,90 +4,63 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace TaskTracking
 {
-    public class ProjectRepo
+    public class ProjectRepo : DbRepo
     {
-        private static string _connection = "Host=localhost;Port=5432;Database=postgres;Username=postgres;Password=ILove6Bo0bs;Include Error Detail=true;";
-        private readonly CoworkerRepo coworkerrepo = new CoworkerRepo(_connection);
-        public ProjectRepo(string connection)
-        {
-            _connection = connection;
-        }
+        public ProjectRepo(NpgsqlConnection connection) : base(connection) { }
+
         public void DeleteProject(Project project)
         {
             string sql = "DELETE FROM projects WHERE id=@id";
-            using var npgsqlCommand = Connection(sql);
-            npgsqlCommand.Parameters.AddWithValue("id", project.Id);
-            npgsqlCommand.ExecuteNonQuery();
+            Command(sql).AddWithValue("id", project.Id).ExecuteNonQuery();
         }
         public void UpdateProject(Project project)
         {
             string sql = "UPDATE projects SET name = @name, due_date = @date, description = @descr, priority = @prio, owner_id = @manager WHERE id = @id";
-            using var npgsqlCommand = Connection(sql);
-            ProjectDataToSql(npgsqlCommand, project);
+            ProjectDataToSql(sql, project);
         }
         public void CreateProject(Project project)
         {
             string sql = "INSERT INTO projects (name, due_date, description, priority, owner_id) VALUES (@name, @date, @descr, @prio, @manager)";
-            using var npgsqlCommand = Connection(sql);
-            ProjectDataToSql(npgsqlCommand, project);
+            ProjectDataToSql(sql, project);
         }
-        private void ProjectDataToSql(NpgsqlCommand command, Project project)
+        private void ProjectDataToSql(string sql, Project project)
         {
-            command.Parameters.AddWithValue("id", project.Id);
-            command.Parameters.AddWithValue("name",project.Name);
-            command.Parameters.AddWithValue("date", project.DueDate);
-            command.Parameters.AddWithValue("descr", project.Description);
-            command.Parameters.AddWithValue("prio", project.Priority.ToString());
-            command.Parameters.AddWithValue("manager", project.ManagerId);
-            command.ExecuteNonQuery();
+            Command(sql)
+                .AddWithValue("id", project.Id)
+                .AddWithValue("name", project.Name)
+                .AddWithValue("date", project.DueDate)
+                .AddWithValue("descr", project.Description)
+                .AddWithValue("prio", project.Priority.ToString())
+                .AddWithValue("manager", project.ManagerId)
+                .ExecuteNonQuery();
         }
-        private NpgsqlCommand Connection(string sql)
-        {
-            var connecting = new NpgsqlConnection(_connection);
-            connecting.Open();
-            var command = new NpgsqlCommand(sql, connecting);
-            return command;
-        }
+
         public Project? GetProjectByName(string name)
         {
             string sql = "SELECT id, name, due_date, description, priority, owner_id FROM projects WHERE name = @name";
-            using var command = Connection(sql);
-            command.Parameters.AddWithValue("name", name);
-            var gettingData = ProjectData(command);
-            return gettingData;
+            var reader = Command(sql).AddWithValue("name", name).ExecuteReader();
+            return ProjectData(reader);
         }
         public Project? GetProjectById (int id)
         {
             string sql = "SELECT id, name, due_date, description, priority, owner_id FROM projects WHERE id = @id";
-            using var command = Connection(sql);
-            command.Parameters.AddWithValue("id", id);
-            var gettingData = ProjectData(command);
-            return gettingData;
+            var reader = Command(sql).AddWithValue("id", id).ExecuteReader();
+            return ProjectData(reader);
         }
         public bool CheckIfProjectExists(int id)
         {
             string sql = "SELECT 1 FROM projects WHERE id = @id";
-            using var command = Connection(sql);
-            command.Parameters.AddWithValue("id", id);
-            using var reader = command.ExecuteReader();
-            if (reader.Read())
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return Command(sql).AddWithValue("id", id).CheckIfEntityExists();
         }
-        private Project? ProjectData(NpgsqlCommand command)
+        private Project? ProjectData(NpgsqlDataReader reader)
         {
             int managerId = 0;
             int createdBy = 0;
-            var project = new Project();
-            using var reader = command.ExecuteReader();
+            Project project = null;
             if (reader.Read())
             {
                 project = new Project()
@@ -99,15 +72,15 @@ namespace TaskTracking
                     Priority = Enum.Parse<Priority>(reader.GetString(4)),
                 };
                 managerId = reader.GetInt32(5);
-                var manager = coworkerrepo.GetCoworkerById(managerId);
+                var manager = Initializer.GetCoworkerRepo().GetCoworkerById(managerId);
                 project.ManagerId = manager.Id;
             }
+            reader.Close();
             return project;
         }
-        private List<ProjectDTO> AllProjectsData(NpgsqlCommand command)
+        private List<ProjectDTO> AllProjectsData(NpgsqlDataReader reader)
         {
             List<ProjectDTO> list = new List<ProjectDTO>();
-            using var reader = command.ExecuteReader();
             while (reader.Read())
             {
                 list.Add(new ProjectDTO()
@@ -120,19 +93,16 @@ namespace TaskTracking
                     ManagerId = reader.GetInt32(5)
                 });
             }
+            reader.Close();
             return list;
         }
         public List<ProjectDTO> GetAllProjects()
         {
-            List<ProjectDTO> list = new List<ProjectDTO>();
             string sql = "SELECT * FROM projects";
-            using var command = Connection(sql);
-            list = AllProjectsData(command);
-            return list;
+            return AllProjectsData(Command(sql).ExecuteReader());
         }
         public List<ProjectDTO> GetFilteredProjects(Dictionary<FilterOptions, string> filters)
         {
-            List<ProjectDTO> list = new List<ProjectDTO>();
             List<string> foundFilters = new List<string>();
             List<NpgsqlParameter> foundValues = new List<NpgsqlParameter>();
 
@@ -151,10 +121,8 @@ namespace TaskTracking
             }
 
             string sql = "SELECT * FROM projects" + " WHERE " + string.Join(" AND ", foundFilters);
-            using var command = Connection(sql);
-            command.Parameters.AddRange(foundValues.ToArray());
-            list = AllProjectsData(command);
-            return list;
+            var reader = Command(sql).AddRange(foundValues.ToArray()).ExecuteReader();
+            return AllProjectsData(reader);
         }
     }
 }

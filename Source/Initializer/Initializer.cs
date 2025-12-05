@@ -21,7 +21,7 @@ namespace TaskTracking
             _appConfig = new AppConfig(fileName);
         }
 
-        public static NpgsqlConnection GetConnectionToDB()
+        public static void ConnectToDB()
         {
             if (_appConfig == null)
             {
@@ -33,35 +33,33 @@ namespace TaskTracking
                 _npgsqlConnection = new NpgsqlConnection(_appConfig.GetConnectionString());
                 _npgsqlConnection.Open();
             }
-
-            return _npgsqlConnection;
         }
 
-        public static CoworkerRepo GetCoworkerRepo(NpgsqlConnection connection)
+        public static CoworkerRepo GetCoworkerRepo()
         {
             if (_coworkerRepo == null)
             {
-                _coworkerRepo = new CoworkerRepo(connection);
+                _coworkerRepo = new CoworkerRepo(_npgsqlConnection);
             }
 
             return _coworkerRepo;
         }
 
-        public static ProjectRepo GetProjectRepo(NpgsqlConnection connection)
+        public static ProjectRepo GetProjectRepo()
         {
             if (_projectRepo == null)
             {
-                _projectRepo = new ProjectRepo(connection);
+                _projectRepo = new ProjectRepo(_npgsqlConnection);
             }
 
             return _projectRepo;
         }
 
-        public static TaskRepo GetTaskRepo(NpgsqlConnection connection)
+        public static TaskRepo GetTaskRepo()
         {
             if (_taskRepo == null)
             {
-                _taskRepo = new TaskRepo(connection);
+                _taskRepo = new TaskRepo(_npgsqlConnection);
             }
 
             return _taskRepo;

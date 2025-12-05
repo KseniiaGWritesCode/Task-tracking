@@ -8,96 +8,66 @@ using Npgsql;
 
 namespace TaskTracking
 {
-    public class CoworkerRepo
+    public class CoworkerRepo : DbRepo
     {
-        private readonly string _connection;
-        public CoworkerRepo(string connection)
-        {
-            _connection = connection;
-        }
+        public CoworkerRepo(NpgsqlConnection connection) : base (connection) { }
+
         public void DeleteCoworker(Coworker coworker)
         {
             string sql = "DELETE FROM users WHERE email = @email";
-            using var npgsqlCommand = Connection(sql);
-            npgsqlCommand.Parameters.AddWithValue("email", coworker.EMail);
-            npgsqlCommand.ExecuteNonQuery();
+            Command(sql).AddWithValue("email", coworker.EMail).ExecuteNonQuery();
         }
         public void UpdateCoworker(Coworker coworker)
         {
             string sql = "UPDATE users SET name = @n, birthday = @b, email = @e, position = @r, password_hash = @p WHERE id = @id ";
-            using var npgsqlCommand = Connection(sql);
-            CoworkerDataToSql(npgsqlCommand, coworker);
+            CoworkerDataToSql(sql, coworker);
         }
         public void CreateCoworker(Coworker coworker)
         {
             string sql = "INSERT INTO users (name, birthday, email, position, password_hash) VALUES (@n, @b, @e, @r, @p)";
-            using var npgsqlCommand = Connection(sql);
-            CoworkerDataToSql(npgsqlCommand, coworker);
+            CoworkerDataToSql(sql, coworker);
         }
-        private void CoworkerDataToSql(NpgsqlCommand command, Coworker coworker)
+        private void CoworkerDataToSql(string sql, Coworker coworker)
         {
-            command.Parameters.AddWithValue("id", coworker.Id);
-            command.Parameters.AddWithValue("n", coworker.Name);
-            command.Parameters.AddWithValue("b", coworker.Birthday);
-            command.Parameters.AddWithValue("e", coworker.EMail);
-            command.Parameters.AddWithValue("r", coworker.Position.ToString());
-            command.Parameters.AddWithValue("p", coworker.Password);
-            command.ExecuteNonQuery();
-        }
-        private NpgsqlCommand Connection(string sql)
-        {
-            var connecting = new NpgsqlConnection(_connection);
-            connecting.Open();
-            var command = new NpgsqlCommand(sql, connecting);
-            return command;
+            Command(sql)
+                .AddWithValue("email", coworker.EMail)    
+                .AddWithValue("id", coworker.Id)
+                .AddWithValue("n", coworker.Name)
+                .AddWithValue("b", coworker.Birthday)
+                .AddWithValue("e", coworker.EMail)
+                .AddWithValue("r", coworker.Position.ToString())
+                .AddWithValue("p", coworker.Password)
+                .ExecuteNonQuery();
         }
         public bool CheckIfUserExists(string mail)
         {
             string sql = "SELECT 1 FROM users WHERE email = @e";
-            using var command = Connection(sql);
-            command.Parameters.AddWithValue("e", mail);
-            using var reader = command.ExecuteReader();
-            if (reader.Read())
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return Command(sql).AddWithValue("e", mail).CheckIfEntityExists();
         }
         public string GetPasswordHash(string mail)
         {
             string sql = "SELECT password_hash FROM users WHERE email = @e";
-            using var command = Connection(sql);
-            command.Parameters.AddWithValue("e", mail);
-
-            var result = command.ExecuteScalar();
-            return result?.ToString();
+            return Command(sql).AddWithValue("e", mail).ExecuteScalar()?.ToString();
         }
         public Coworker? GetCoworkerByMail (string mail)
         {
             string sql = "SELECT id, name, birthday, email, position FROM users WHERE email = @e";
-            using var command = Connection(sql);
-            command.Parameters.AddWithValue("e", mail);
-            var gettingData = CoworkerData(command);
-            return gettingData;
+            var reader = Command(sql).AddWithValue("e", mail).ExecuteReader();
+            return CoworkerData(reader);
         }
         public Coworker? GetCoworkerById(int id)
         {
             string sql = "SELECT id, name, birthday, email, position FROM users WHERE id = @id";
-            using var command = Connection(sql);
-            command.Parameters.AddWithValue("id", id);
-            var gettingData = CoworkerData(command);
-            return gettingData;
+            var reader = Command(sql).AddWithValue("id", id).ExecuteReader();
+            return CoworkerData(reader);
         }
 
-        private Coworker? CoworkerData(NpgsqlCommand command)
+        private Coworker? CoworkerData(NpgsqlDataReader reader)
         {
-            using var reader = command.ExecuteReader();
+            Coworker result = null;
             if (reader.Read())
             {
-                return new Coworker
+                result = new Coworker
                 {
                     Id = reader.GetInt32(0),
                     Name = reader.GetString(1),
@@ -106,13 +76,14 @@ namespace TaskTracking
                     Position = Enum.Parse<Position>(reader.GetString(4), ignoreCase: true)
                 };
             }
-            return null;
+
+            reader.Close();
+            return result;
         }
 
-        private List<CoworkerDTO> AllCoworkersData(NpgsqlCommand command)
+        private List<CoworkerDTO> AllCoworkersData(NpgsqlDataReader reader)
         {
             List<CoworkerDTO> list = new List<CoworkerDTO>();
-            using var reader = command.ExecuteReader();
             while (reader.Read())
             {
                 list.Add(new CoworkerDTO
@@ -124,21 +95,18 @@ namespace TaskTracking
                     Position = Enum.Parse<Position>(reader.GetString(4), ignoreCase: true)
                 });
             }
+            reader.Close();
             return list;
         }
 
         public List<CoworkerDTO> GetAllCoworkers()
         {
-            List<CoworkerDTO> list = new List<CoworkerDTO>();
             string sql = "SELECT * FROM users";
-            using var command = Connection(sql);
-            AllCoworkersData(command);
-            return list;
+            return AllCoworkersData(Command(sql).ExecuteReader());
         }
 
         public List<CoworkerDTO> GetFilteredCoworkers (Dictionary<FilterOptions, string> filters)
         {
-            List<CoworkerDTO> coworkerDTOs = new List<CoworkerDTO>();
             List<string> foundFilters = new List<string>();
             List<NpgsqlParameter> foundValues = new List<NpgsqlParameter>();
 
@@ -158,10 +126,8 @@ namespace TaskTracking
             }
 
             string sql = "SELECT * FROM users" + " WHERE " + string.Join(" AND ", foundFilters);
-            using var command = Connection(sql);
-            command.Parameters.AddRange(foundValues.ToArray());
-            coworkerDTOs = AllCoworkersData(command);
-            return coworkerDTOs;
+            var reader = Command(sql).AddRange(foundValues.ToArray()).ExecuteReader();
+            return AllCoworkersData(reader);
         }
     }
 }

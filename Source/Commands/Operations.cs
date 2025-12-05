@@ -13,15 +13,6 @@ namespace TaskTracking
 {
     public static class Operations
     {
-        private static readonly string connection = "Host=localhost;Port=5432;Database=postgres;Username=postgres;Password=ILove6Bo0bs;Include Error Detail=true;";
-        public static CoworkerRepo coworkerRepo = new CoworkerRepo(connection);
-        public static ProjectRepo projectRepo = new ProjectRepo(connection);
-        public static TaskRepo taskRepo = new TaskRepo(connection);
-
-        public static Table allCoworkers = AllToTable(coworkerRepo.GetAllCoworkers());
-        public static Table allProjects = AllToTable(projectRepo.GetAllProjects());
-        public static Table allTasks = AllToTable(taskRepo.GetAllTasks());
-
         public static bool ProjectDataToDB (List<string> data)
         {
             bool success = false;
@@ -41,7 +32,7 @@ namespace TaskTracking
                 {
                     Id = id
                 };
-                projectRepo.DeleteProject(project);
+                Initializer.GetProjectRepo().DeleteProject(project);
                 success = true;
             }
             
@@ -67,7 +58,7 @@ namespace TaskTracking
                     Priority = validPriority,
                     ManagerId = projectDTO.ManagerId
                 };
-                projectRepo.CreateProject(project);
+                Initializer.GetProjectRepo().CreateProject(project);
                 success = true;
             }
 
@@ -75,7 +66,7 @@ namespace TaskTracking
             if (data.Count == 6)
             {
                 int id = int.Parse(data[0]);
-                project = projectRepo.GetProjectById(id);
+                project = Initializer.GetProjectRepo().GetProjectById(id);
                 projectDTO.Id = project.Id;
                 projectDTO.Name = project.Name;
                 projectDTO.DueDate = project.DueDate;
@@ -113,7 +104,7 @@ namespace TaskTracking
                     Priority = projectDTO.Priority,
                     ManagerId = projectDTO.ManagerId
                 };
-                projectRepo.UpdateProject(project);
+                Initializer.GetProjectRepo().UpdateProject(project);
                 success = true;
             }
             return success;
@@ -137,7 +128,7 @@ namespace TaskTracking
                 { 
                     Id = taskDTO.Id
                 };
-                taskRepo.DeleteTask(task);
+                Initializer.GetTaskRepo().DeleteTask(task);
                 success = true;
             }
 
@@ -171,7 +162,7 @@ namespace TaskTracking
                     ManagerId = taskDTO.ManagerId,
                     EmployeeId = taskDTO.EmployeeId
                 };
-                taskRepo.CreateTask(task);
+                Initializer.GetTaskRepo().CreateTask(task);
                 success = true;
             }
 
@@ -179,7 +170,7 @@ namespace TaskTracking
             if (data.Count == 8)
             {
                 int id = int.Parse(data[0]);
-                task = taskRepo.GetTaskById(id);
+                task = Initializer.GetTaskRepo().GetTaskById(id);
                 taskDTO.Id = task.Id;
                 taskDTO.Name = task.Name;
                 taskDTO.DueDate = task.DueDate;
@@ -223,7 +214,7 @@ namespace TaskTracking
                     ManagerId = taskDTO.ManagerId,
                     EmployeeId = taskDTO.EmployeeId
                 };
-                taskRepo.UpdateTask(task);
+                Initializer.GetTaskRepo().UpdateTask(task);
                 success = true;
             }
 
@@ -248,7 +239,7 @@ namespace TaskTracking
                     EMail = coworkerDTO.EMail,
                     Password = coworkerDTO.Password
                 };
-                coworkerRepo.DeleteCoworker(coworker);
+                Initializer.GetCoworkerRepo().DeleteCoworker(coworker);
                 success = true;
             }
 
@@ -272,7 +263,7 @@ namespace TaskTracking
                     Position = coworkerDTO.Position,
                     Password = coworkerDTO.Password
                 };
-                coworkerRepo.CreateCoworker(coworker);
+                Initializer.GetCoworkerRepo().CreateCoworker(coworker);
                 success = true;
             }
 
@@ -280,7 +271,7 @@ namespace TaskTracking
             if (data.Count == 6)
             {
                 int id = int.Parse(data[0]);
-                coworker = coworkerRepo.GetCoworkerById(id);
+                coworker = Initializer.GetCoworkerRepo().GetCoworkerById(id);
                 coworkerDTO.Id = coworker.Id;
                 coworkerDTO.Name = coworker.Name;
                 coworkerDTO.Birthday = coworker.Birthday;
@@ -310,7 +301,7 @@ namespace TaskTracking
 
                 coworkerDTO.Password = string.IsNullOrWhiteSpace(data[5]) ? coworkerDTO.Password : BCrypt.Net.BCrypt.HashPassword(data[5]);
 
-                coworkerRepo.UpdateCoworker(new Coworker
+                Initializer.GetCoworkerRepo().UpdateCoworker(new Coworker
                 {
                     Id = coworkerDTO.Id,
                     Name = coworkerDTO.Name,
@@ -330,13 +321,13 @@ namespace TaskTracking
             switch (category)
             {
                 case Category.Coworkers:
-                    return allCoworkers = AllToTable(coworkerRepo.GetAllCoworkers());
+                    return AllToTable(Initializer.GetCoworkerRepo().GetAllCoworkers());
 
                 case Category.Projects:
-                    return allProjects = AllToTable(projectRepo.GetAllProjects());
+                    return AllToTable(Initializer.GetProjectRepo().GetAllProjects());
 
                 case Category.Tasks:
-                    return allTasks = AllToTable(taskRepo.GetAllTasks());
+                    return AllToTable(Initializer.GetTaskRepo().GetAllTasks());
 
                 default:
                     throw new NotSupportedException($"Category {category} is not supported.");
@@ -413,7 +404,7 @@ namespace TaskTracking
         {
             Dictionary<FilterOptions, string> filters = new Dictionary<FilterOptions, string>();
             filters = DataToDictionary(filterOptions, filterOptionsValues);
-            List<CoworkerDTO> coworkerDTOs = coworkerRepo.GetFilteredCoworkers(filters);
+            List<CoworkerDTO> coworkerDTOs = Initializer.GetCoworkerRepo().GetFilteredCoworkers(filters);
             var tableCoworkers = AllToTable(coworkerDTOs);
             return tableCoworkers;
         }
@@ -421,7 +412,7 @@ namespace TaskTracking
         {
             Dictionary<FilterOptions, string> filters = new Dictionary<FilterOptions, string>();
             filters = DataToDictionary(filterOptions, filterOptionsValues);
-            List<ProjectDTO> projectDTOs = projectRepo.GetFilteredProjects(filters);
+            List<ProjectDTO> projectDTOs = Initializer.GetProjectRepo().GetFilteredProjects(filters);
             var tableProjects = AllToTable(projectDTOs);
             return tableProjects;
         }
@@ -429,7 +420,7 @@ namespace TaskTracking
         {
             Dictionary<FilterOptions, string> filters = new Dictionary<FilterOptions, string>();
             filters = DataToDictionary(filterOptions, filterOptionsValues);
-            List<TaskDTO> taskDTOs = taskRepo.GetFilteredTasks(filters);
+            List<TaskDTO> taskDTOs = Initializer.GetTaskRepo().GetFilteredTasks(filters);
             var tableProjects = AllToTable(taskDTOs);
             return tableProjects;  
         }

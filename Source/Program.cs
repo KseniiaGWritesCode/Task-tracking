@@ -8,7 +8,6 @@ namespace TaskTracking
     public class Program
     {
         const string APP_CONFIG_FILE = "config.json";
-        private static NpgsqlConnection connection;
 
         static void Main(string[] args)
         {
@@ -16,17 +15,12 @@ namespace TaskTracking
             try
             {
                 Initializer.LoadConfig(APP_CONFIG_FILE);
-                connection = Initializer.GetConnectionToDB();
+                Initializer.ConnectToDB();
             }
             catch (Exception ex)
             {
                 AnsiConsole.MarkupLine($"[magenta1]Initialization error:[/] {ex.Message}");
             }
-
-
-
-
-
 
 
             Coworker? coworker = null;
@@ -35,9 +29,11 @@ namespace TaskTracking
             List<string> data = new List<string>();
             string userInput = null;
             string readInput = null;
+
+
+            //login:
             try
             {
-                //login:
                 AnsiConsole.MarkupLine("[palegreen1_1]Hello! Type login to login.[/]");
                 readInput = ReadingInput(userInput);
 
@@ -59,9 +55,16 @@ namespace TaskTracking
                         return;
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                AnsiConsole.MarkupLine($"[magenta1]Loggining error:[/] {ex.Message}");
+            }
 
+            while(true)
+            {
                 //actions for user:
-                while (true)
+                try
                 {
                     AnsiConsole.MarkupLine("[palegreen1_1]Choose your action:[/]");
                     ShowListOfCommands();
@@ -192,11 +195,12 @@ namespace TaskTracking
                         }
                     }
                 }
+                catch (Exception ex)
+                {
+                    AnsiConsole.MarkupLine($"[magenta1]Exception caught![/] {ex.Message}");
+                }
             }
-            catch (Exception ex)
-            {
-                AnsiConsole.MarkupLine($"[magenta1]Exception caught![/] {ex.Message}");
-            }
+           
         }
         private static Table ListOfCommands()
         {

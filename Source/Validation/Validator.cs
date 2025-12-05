@@ -17,11 +17,6 @@ namespace TaskTracking
 {
     public static class Validator
     {
-        private static string connection = "Host=localhost;Port=5432;Database=postgres;Username=postgres;Password=ILove6Bo0bs;Include Error Detail=true;";
-        private static readonly CoworkerRepo coworkerRepo = new CoworkerRepo(connection);
-        private static readonly ProjectRepo projectRepo = new ProjectRepo(connection);
-        private static readonly TaskRepo taskRepo = new TaskRepo(connection);
-
         //validators before input of values:
         public static Coworker? ValidateLogin(string login)
         {
@@ -34,13 +29,13 @@ namespace TaskTracking
                     ValidationResult.Failure("Not all the required data are in the list.");
                 }
                 
-                var existingUser = coworkerRepo.CheckIfUserExists(checkLogin[0].Trim());
+                var existingUser = Initializer.GetCoworkerRepo().CheckIfUserExists(checkLogin[0].Trim());
                 if (existingUser)
                 {
-                    var passwordHash = coworkerRepo.GetPasswordHash(checkLogin[0].Trim());
+                    var passwordHash = Initializer.GetCoworkerRepo().GetPasswordHash(checkLogin[0].Trim());
                     if (BCrypt.Net.BCrypt.Verify(checkLogin[1].Trim(), passwordHash))
                     {
-                        coworker = coworkerRepo.GetCoworkerByMail(checkLogin[0].Trim());
+                        coworker = Initializer.GetCoworkerRepo().GetCoworkerByMail(checkLogin[0].Trim());
                         return coworker;
                     }
                 }
@@ -162,11 +157,11 @@ namespace TaskTracking
         }
         public static ValidationResult ManagerValidator(string input)
         {
-            if (!coworkerRepo.CheckIfUserExists(input))
+            if (!Initializer.GetCoworkerRepo().CheckIfUserExists(input))
             {
                 ValidationResult.Failure("No user with this e-mail!");
             }
-            if (coworkerRepo.GetCoworkerById(int.Parse(input)).Position != Position.Manager)
+            if (Initializer.GetCoworkerRepo().GetCoworkerById(int.Parse(input)).Position != Position.Manager)
             {
                 ValidationResult.Failure("This employee isn't a manager!");
             }
@@ -174,7 +169,7 @@ namespace TaskTracking
         }
         public static ValidationResult CoworkerValidator(string email)
         {
-            if (!coworkerRepo.CheckIfUserExists(email))
+            if (!Initializer.GetCoworkerRepo().CheckIfUserExists(email))
             {
                 ValidationResult.Failure("No user with this e-mail!");
             }
@@ -184,7 +179,7 @@ namespace TaskTracking
         {
             int iD = 0;
             int.TryParse(id, out iD);
-            if (!projectRepo.CheckIfProjectExists(iD))
+            if (!Initializer.GetProjectRepo().CheckIfProjectExists(iD))
             {
                 ValidationResult.Failure("No project with this ID!");
             }
@@ -336,7 +331,7 @@ namespace TaskTracking
             bool exists = true;
             string input = data[0].Trim('\'');
             int id = int.Parse(input);
-            exists = projectRepo.CheckIfProjectExists(id);
+            exists = Initializer.GetProjectRepo().CheckIfProjectExists(id);
             if(exists == false)
             {
                 ValidationResult.Failure("Project not found.");
@@ -349,7 +344,7 @@ namespace TaskTracking
             bool exists = true;
             string input = data[0].Trim('\'');
             int id = int.Parse(input);
-            exists = taskRepo.CheckIfTaskExists(id);
+            exists = Initializer.GetTaskRepo().CheckIfTaskExists(id);
             if (exists == false)
             {
                 ValidationResult.Failure("Task not found.");
