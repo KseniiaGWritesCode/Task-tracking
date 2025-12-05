@@ -1,13 +1,34 @@
 ﻿using Spectre.Console;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using Npgsql;
 
 namespace TaskTracking
 {
     public class Program
     {
+        const string APP_CONFIG_FILE = "config.json";
+        private static NpgsqlConnection connection;
+
         static void Main(string[] args)
         {
+            // Initialize
+            try
+            {
+                Initializer.LoadConfig(APP_CONFIG_FILE);
+                connection = Initializer.GetConnectionToDB();
+            }
+            catch (Exception ex)
+            {
+                AnsiConsole.MarkupLine($"[magenta1]Initialization error:[/] {ex.Message}");
+            }
+
+
+
+
+
+
+
             Coworker? coworker = null;
             Commands? validCommand = null;
             Category? validCategory = null;
