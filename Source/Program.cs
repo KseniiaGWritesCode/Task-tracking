@@ -1,22 +1,39 @@
 ﻿using Spectre.Console;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using Npgsql;
 
 namespace TaskTracking
 {
     public class Program
     {
+        const string APP_CONFIG_FILE = "config.json";
+
         static void Main(string[] args)
         {
+            // Initialize
+            try
+            {
+                Initializer.LoadConfig(APP_CONFIG_FILE);
+                Initializer.ConnectToDB();
+            }
+            catch (Exception ex)
+            {
+                AnsiConsole.MarkupLine($"[magenta1]Initialization error:[/] {ex.Message}");
+            }
+
+
             Coworker? coworker = null;
             Commands? validCommand = null;
             Category? validCategory = null;
             List<string> data = new List<string>();
             string userInput = null;
             string readInput = null;
+
+
+            //login:
             try
             {
-                //login:
                 AnsiConsole.MarkupLine("[palegreen1_1]Hello! Type login to login.[/]");
                 readInput = ReadingInput(userInput);
 
@@ -38,9 +55,16 @@ namespace TaskTracking
                         return;
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                AnsiConsole.MarkupLine($"[magenta1]Loggining error:[/] {ex.Message}");
+            }
 
+            while(true)
+            {
                 //actions for user:
-                while (true)
+                try
                 {
                     AnsiConsole.MarkupLine("[palegreen1_1]Choose your action:[/]");
                     ShowListOfCommands();
@@ -171,11 +195,12 @@ namespace TaskTracking
                         }
                     }
                 }
+                catch (Exception ex)
+                {
+                    AnsiConsole.MarkupLine($"[magenta1]Exception caught![/] {ex.Message}");
+                }
             }
-            catch (Exception ex)
-            {
-                AnsiConsole.MarkupLine($"[magenta1]Exception caught![/] {ex.Message}");
-            }
+           
         }
         private static Table ListOfCommands()
         {
