@@ -11,6 +11,7 @@ using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace TaskTracking
@@ -28,15 +29,14 @@ namespace TaskTracking
                 {
                     ValidationResult.Failure("Not all the required data are in the list.");
                 }
-                
-                var existingUser = Initializer.GetCoworkerRepo().CheckIfUserExists(checkLogin[0].Trim());
-                if (existingUser)
+
+                var existingUser = Initializer.GetDbContext().Coworkers.FirstOrDefault(c => c.EMail == checkLogin[0].Trim());
+                if (existingUser != null)
                 {
-                    var passwordHash = Initializer.GetCoworkerRepo().GetPasswordHash(checkLogin[0].Trim());
+                    var passwordHash = existingUser.Password;
                     if (BCrypt.Net.BCrypt.Verify(checkLogin[1].Trim(), passwordHash))
                     {
-                        coworker = Initializer.GetCoworkerRepo().GetCoworkerByMail(checkLogin[0].Trim());
-                        return coworker;
+                        return existingUser;
                     }
                 }
             }
@@ -157,29 +157,31 @@ namespace TaskTracking
         }
         public static ValidationResult ManagerValidator(string input)
         {
-            if (!Initializer.GetCoworkerRepo().CheckIfUserExists(input))
+            int.TryParse(input, out var iD);
+            var existingUser = Initializer.GetDbContext().Coworkers.FirstOrDefault(c => c.Id == iD);
+            if (existingUser == null)
             {
-                ValidationResult.Failure("No user with this e-mail!");
+                ValidationResult.Failure("No user with this ID!");
             }
-            if (Initializer.GetCoworkerRepo().GetCoworkerById(int.Parse(input)).Position != Position.Manager)
+            if (existingUser.Position != Position.Manager)
             {
                 ValidationResult.Failure("This employee isn't a manager!");
             }
             return new ValidationResult(true);
         }
-        public static ValidationResult CoworkerValidator(string email)
+        public static ValidationResult CoworkerValidator(string id)
         {
-            if (!Initializer.GetCoworkerRepo().CheckIfUserExists(email))
+            int.TryParse(id, out var iD);
+            if (!Initializer.GetDbContext().Coworkers.Any(c => c.Id == iD))
             {
-                ValidationResult.Failure("No user with this e-mail!");
+                ValidationResult.Failure("No user with this ID!");
             }
             return new ValidationResult(true);
         }
         public static ValidationResult ProjectValidator(string id)
         {
-            int iD = 0;
-            int.TryParse(id, out iD);
-            if (!Initializer.GetProjectRepo().CheckIfProjectExists(iD))
+            int.TryParse(id, out var iD);
+            if (!Initializer.GetDbContext().Projects.Any(c => c.Id == iD))
             {
                 ValidationResult.Failure("No project with this ID!");
             }
@@ -328,28 +330,36 @@ namespace TaskTracking
         }
         public static bool ValidateDeleteProject(List<string> data)
         {
-            bool exists = true;
             string input = data[0].Trim('\'');
             int id = int.Parse(input);
-            exists = Initializer.GetProjectRepo().CheckIfProjectExists(id);
-            if(exists == false)
-            {
-                ValidationResult.Failure("Project not found.");
-                return false;
-            }
-            return exists;
+            return Initializer.GetDbContext().Projects.Any(c => c.Id == id);
+
+            //bool exists = true;
+            //string input = data[0].Trim('\'');
+            //int id = int.Parse(input);
+            //exists = Initializer.GetProjectRepo().CheckIfProjectExists(id);
+            //if(exists == false)
+            //{
+            //    ValidationResult.Failure("Project not found.");
+            //    return false;
+            //}
+            //return exists;
         }
         public static bool ValidateDeleteTask(List<string> data)
         {
-            bool exists = true;
             string input = data[0].Trim('\'');
             int id = int.Parse(input);
-            exists = Initializer.GetTaskRepo().CheckIfTaskExists(id);
-            if (exists == false)
-            {
-                ValidationResult.Failure("Task not found.");
-            }
-            return exists;
+            return Initializer.GetDbContext().Tasks.Any(c => c.Id == id);
+
+            //bool exists = true;
+            //string input = data[0].Trim('\'');
+            //int id = int.Parse(input);
+            //exists = Initializer.GetTaskRepo().CheckIfTaskExists(id);
+            //if (exists == false)
+            //{
+            //    ValidationResult.Failure("Task not found.");
+            //}
+            //return exists;
         }
         public static bool ValidateRead(List<string> data)
         {

@@ -2,24 +2,25 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
 using Npgsql;
+using Microsoft.EntityFrameworkCore;
 
 namespace TaskTracking
 {
     public class Program
     {
-        const string APP_CONFIG_FILE = "config.json";
+        
 
         static void Main(string[] args)
         {
             // Initialize
             try
             {
-                Initializer.LoadConfig(APP_CONFIG_FILE);
-                Initializer.ConnectToDB();
+                Initializer.InitEntities();
             }
             catch (Exception ex)
             {
                 AnsiConsole.MarkupLine($"[magenta1]Initialization error:[/] {ex.Message}");
+                return;
             }
 
 
@@ -61,7 +62,7 @@ namespace TaskTracking
                 AnsiConsole.MarkupLine($"[magenta1]Loggining error:[/] {ex.Message}");
             }
 
-            while(true)
+            while (true)
             {
                 //actions for user:
                 try
