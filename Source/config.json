@@ -1,7 +1,0 @@
-{
-	"Host": "localhost",
-    "Port": 5432,
-    "Username": "postgres",
-    "Password": "admin",
-    "Database": "TaskTracking"
-}
