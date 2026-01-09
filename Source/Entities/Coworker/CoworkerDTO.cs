@@ -10,7 +10,7 @@ namespace TaskTracking
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        public DateTime Birthday { get; set; }
+        public DateTimeOffset Birthday { get; set; }
         public string EMail { get; set; }
         public Position Position { get; set; }
         public string Password { get; set; }

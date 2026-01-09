@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualBasic;
+using Npgsql;
 using Spectre.Console;
 using System;
 using System.Collections.Generic;
@@ -18,7 +19,7 @@ namespace TaskTracking
             bool success = false;
             ProjectDTO projectDTO = new ProjectDTO();
             Project project = null;
-            DateTime validDate;
+            DateTimeOffset validDate;
             Priority validPriority;
             Position validPosition;
 
@@ -27,19 +28,22 @@ namespace TaskTracking
             {
                 int id = 0;
                 int.TryParse(data[0], out id);
-                projectDTO.Id = id;
-                project = new Project
-                {
-                    Id = id
-                };
-                Initializer.GetProjectRepo().DeleteProject(project);
+                project = Initializer.GetDbContext().Projects.FirstOrDefault(p => p.Id == id);
+                if (project == null) throw new InvalidOperationException($"Project {id} not found");
+                //projectDTO.Id = id;
+                //project = new Project
+                //{
+                //    Id = id
+                //};
+                Initializer.GetDbContext().Projects.Remove(project);
+                Initializer.GetDbContext().SaveChanges();
                 success = true;
             }
             
             //create project:
             if (data.Count == 5)
             {
-                DateTime.TryParseExact(data[1], "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out validDate);
+                DateTimeOffset.TryParseExact(data[1], "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out validDate);
                 Enum.TryParse<Priority>(data[3], ignoreCase: true, out validPriority);
 
                 projectDTO.Name = data[0];
@@ -53,12 +57,14 @@ namespace TaskTracking
                 project = new Project
                 {
                     Name = projectDTO.Name,
-                    DueDate = validDate,
+                    DueDate = validDate.ToUniversalTime(),
                     Description = projectDTO.Description,
                     Priority = validPriority,
-                    ManagerId = projectDTO.ManagerId
+                    ManagerId = projectDTO.ManagerId,
+                    Manager = Initializer.GetDbContext().Coworkers.FirstOrDefault(p => p.Id == projectDTO.ManagerId)
                 };
-                Initializer.GetProjectRepo().CreateProject(project);
+                Initializer.GetDbContext().Projects.Add(project);
+                Initializer.GetDbContext().SaveChanges();
                 success = true;
             }
 
@@ -66,17 +72,18 @@ namespace TaskTracking
             if (data.Count == 6)
             {
                 int id = int.Parse(data[0]);
-                project = Initializer.GetProjectRepo().GetProjectById(id);
+                project = Initializer.GetDbContext().Projects.FirstOrDefault(p => p.Id == id);
+                if (project == null) throw new InvalidOperationException($"Project {id} not found");
                 projectDTO.Id = project.Id;
                 projectDTO.Name = project.Name;
-                projectDTO.DueDate = project.DueDate;
+                projectDTO.DueDate = project.DueDate.ToLocalTime();
                 projectDTO.Description = project.Description;
                 projectDTO.Priority = project.Priority;
                 projectDTO.ManagerId = project.ManagerId;
 
-                DateTime? validDateUpdate = null;
+                DateTimeOffset? validDateUpdate = null;
                 if (!string.IsNullOrWhiteSpace(data[2]) &&
-                    DateTime.TryParseExact(data[2], "dd.MM.yyyy", CultureInfo.InvariantCulture,
+                    DateTimeOffset.TryParseExact(data[2], "dd.MM.yyyy", CultureInfo.InvariantCulture,
                                            DateTimeStyles.None, out var parsedDate))
                 {
                     validDateUpdate = parsedDate;
@@ -99,12 +106,14 @@ namespace TaskTracking
                 {
                     Id = projectDTO.Id,
                     Name = projectDTO.Name,
-                    DueDate = project.DueDate,
+                    DueDate = project.DueDate.ToUniversalTime(),
                     Description = projectDTO.Description,
                     Priority = projectDTO.Priority,
-                    ManagerId = projectDTO.ManagerId
+                    ManagerId = projectDTO.ManagerId,
+                    Manager = Initializer.GetDbContext().Coworkers.FirstOrDefault(p => p.Id == projectDTO.ManagerId)
                 };
-                Initializer.GetProjectRepo().UpdateProject(project);
+                Initializer.GetDbContext().Projects.Update(project);
+                Initializer.GetDbContext().SaveChanges();
                 success = true;
             }
             return success;
@@ -114,7 +123,7 @@ namespace TaskTracking
             bool success = false;
             TaskDTO taskDTO = new TaskDTO();
             Task task = null;
-            DateTime validDate;
+            DateTimeOffset validDate;
             Priority validPriority;
             Position validPosition;
 
@@ -123,19 +132,22 @@ namespace TaskTracking
             {
                 int id = 0;
                 int.TryParse(data[0], out id);
-                taskDTO.Id = id;
-                task = new Task()
-                { 
-                    Id = taskDTO.Id
-                };
-                Initializer.GetTaskRepo().DeleteTask(task);
+                task = Initializer.GetDbContext().Tasks.FirstOrDefault(p => p.Id == id);
+                if (task == null) throw new InvalidOperationException($"Task {id} not found");
+                //taskDTO.Id = id;
+                //task = new Task()
+                //{ 
+                //    Id = taskDTO.Id
+                //};
+                Initializer.GetDbContext().Tasks.Remove(task);
+                Initializer.GetDbContext().SaveChanges();
                 success = true;
             }
 
             //create task:
             if(data.Count == 7)
             {
-                DateTime.TryParseExact(data[1], "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out validDate);
+                DateTimeOffset.TryParseExact(data[1], "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out validDate);
                 Enum.TryParse<Priority>(data[3], ignoreCase: true, out validPriority);
 
                 taskDTO.Name = data[0];
@@ -155,14 +167,18 @@ namespace TaskTracking
                 task = new Task
                 {
                     Name = taskDTO.Name,
-                    DueDate = validDate,
+                    DueDate = validDate.ToUniversalTime(),
                     Description = taskDTO.Description,
                     Priority = validPriority,
                     ProjectId = taskDTO.ProjectId,
+                    Project = Initializer.GetDbContext().Projects.FirstOrDefault(p => p.Id == taskDTO.ProjectId),
                     ManagerId = taskDTO.ManagerId,
-                    EmployeeId = taskDTO.EmployeeId
+                    Manager = Initializer.GetDbContext().Coworkers.FirstOrDefault(p => p.Id == taskDTO.ManagerId),
+                    EmployeeId = taskDTO.EmployeeId,
+                    Employee = Initializer.GetDbContext().Coworkers.FirstOrDefault(p => p.Id == taskDTO.EmployeeId)
                 };
-                Initializer.GetTaskRepo().CreateTask(task);
+                Initializer.GetDbContext().Tasks.Add(task);
+                Initializer.GetDbContext().SaveChanges();
                 success = true;
             }
 
@@ -170,19 +186,20 @@ namespace TaskTracking
             if (data.Count == 8)
             {
                 int id = int.Parse(data[0]);
-                task = Initializer.GetTaskRepo().GetTaskById(id);
+                task = Initializer.GetDbContext().Tasks.FirstOrDefault(p => p.Id == id);
+                if (task == null) throw new InvalidOperationException($"Task {id} not found");
                 taskDTO.Id = task.Id;
                 taskDTO.Name = task.Name;
-                taskDTO.DueDate = task.DueDate;
+                taskDTO.DueDate = task.DueDate.ToLocalTime();
                 taskDTO.Description = task.Description;
                 taskDTO.Priority = task.Priority;
                 taskDTO.ProjectId = task.ProjectId;
                 taskDTO.ManagerId = task.ManagerId;
                 taskDTO.EmployeeId = task.EmployeeId;
 
-                DateTime? validDateUpdate = null;
+                DateTimeOffset? validDateUpdate = null;
                 if (!string.IsNullOrWhiteSpace(data[2]) &&
-                    DateTime.TryParseExact(data[2], "dd.MM.yyyy", CultureInfo.InvariantCulture,
+                    DateTimeOffset.TryParseExact(data[2], "dd.MM.yyyy", CultureInfo.InvariantCulture,
                                            DateTimeStyles.None, out var parsedDate))
                 {
                     validDateUpdate = parsedDate;
@@ -207,14 +224,18 @@ namespace TaskTracking
                 {
                     Id = taskDTO.Id,
                     Name = taskDTO.Name,
-                    DueDate = taskDTO.DueDate,
+                    DueDate = taskDTO.DueDate.ToUniversalTime(),
                     Description = taskDTO.Description,
                     Priority = taskDTO.Priority,
                     ProjectId = taskDTO.ProjectId,
+                    Project = Initializer.GetDbContext().Projects.FirstOrDefault(p => p.Id == taskDTO.ProjectId),
                     ManagerId = taskDTO.ManagerId,
-                    EmployeeId = taskDTO.EmployeeId
+                    Manager = Initializer.GetDbContext().Coworkers.FirstOrDefault(p => p.Id == taskDTO.ManagerId),
+                    EmployeeId = taskDTO.EmployeeId,
+                    Employee = Initializer.GetDbContext().Coworkers.FirstOrDefault(p => p.Id == taskDTO.EmployeeId)
                 };
-                Initializer.GetTaskRepo().UpdateTask(task);
+                Initializer.GetDbContext().Tasks.Update(task);
+                Initializer.GetDbContext().SaveChanges();
                 success = true;
             }
 
@@ -225,28 +246,32 @@ namespace TaskTracking
             bool success = false;
             CoworkerDTO coworkerDTO = new CoworkerDTO();
             Coworker coworker = null;
-            DateTime validDate = default;
+            DateTimeOffset validDate = default;
             Position validPosition = default;
 
             //delete coworker:
             if (data.Count == 2)
             {
+                coworker = Initializer.GetDbContext().Coworkers.FirstOrDefault(p => p.EMail == data[0] && p.Password == BCrypt.Net.BCrypt.HashPassword(data[1]));
+                if (coworker == null) throw new InvalidOperationException($"Coworker {data[0]} not found");
+
                 coworkerDTO.EMail = data[0];
                 coworkerDTO.Password = BCrypt.Net.BCrypt.HashPassword(data[1]);
 
-                coworker = new Coworker
-                {
-                    EMail = coworkerDTO.EMail,
-                    Password = coworkerDTO.Password
-                };
-                Initializer.GetCoworkerRepo().DeleteCoworker(coworker);
+                //coworker = new Coworker
+                //{
+                //    EMail = coworkerDTO.EMail,
+                //    Password = coworkerDTO.Password
+                //};
+                Initializer.GetDbContext().Coworkers.Remove(coworker);
+                Initializer.GetDbContext().SaveChanges();
                 success = true;
             }
 
             //create coworker:
             if (data.Count == 5)
             {
-                DateTime.TryParseExact(data[1], "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out validDate);
+                DateTimeOffset.TryParseExact(data[1], "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out validDate);
                 Enum.TryParse<Position>(data[3], ignoreCase: true, out validPosition);
 
                 coworkerDTO.Name = data[0];
@@ -258,12 +283,13 @@ namespace TaskTracking
                 coworker = new Coworker
                 {
                     Name = coworkerDTO.Name,
-                    Birthday = coworkerDTO.Birthday,
+                    Birthday = coworkerDTO.Birthday.ToUniversalTime(),
                     EMail = coworkerDTO.EMail,
                     Position = coworkerDTO.Position,
                     Password = coworkerDTO.Password
                 };
-                Initializer.GetCoworkerRepo().CreateCoworker(coworker);
+                Initializer.GetDbContext().Coworkers.Add(coworker);
+                Initializer.GetDbContext().SaveChanges();
                 success = true;
             }
 
@@ -271,17 +297,18 @@ namespace TaskTracking
             if (data.Count == 6)
             {
                 int id = int.Parse(data[0]);
-                coworker = Initializer.GetCoworkerRepo().GetCoworkerById(id);
+                coworker = Initializer.GetDbContext().Coworkers.FirstOrDefault(p => p.Id == id);
+                if (coworker == null) throw new InvalidOperationException($"Coworker {id} not found");
                 coworkerDTO.Id = coworker.Id;
                 coworkerDTO.Name = coworker.Name;
-                coworkerDTO.Birthday = coworker.Birthday;
+                coworkerDTO.Birthday = coworker.Birthday.ToLocalTime();
                 coworkerDTO.EMail = coworker.EMail;
                 coworkerDTO.Position = coworker.Position;
                 coworker.Password = coworker.Password;
 
-                DateTime? validDateUpdate = null;
+                DateTimeOffset? validDateUpdate = null;
                 if (!string.IsNullOrWhiteSpace(data[2]) &&
-                    DateTime.TryParseExact(data[2], "dd.MM.yyyy", CultureInfo.InvariantCulture,
+                    DateTimeOffset.TryParseExact(data[2], "dd.MM.yyyy", CultureInfo.InvariantCulture,
                                            DateTimeStyles.None, out var parsedDate))
                 {
                     validDateUpdate = parsedDate;
@@ -301,15 +328,16 @@ namespace TaskTracking
 
                 coworkerDTO.Password = string.IsNullOrWhiteSpace(data[5]) ? coworkerDTO.Password : BCrypt.Net.BCrypt.HashPassword(data[5]);
 
-                Initializer.GetCoworkerRepo().UpdateCoworker(new Coworker
+                Initializer.GetDbContext().Coworkers.Update(new Coworker
                 {
                     Id = coworkerDTO.Id,
                     Name = coworkerDTO.Name,
-                    Birthday = coworkerDTO.Birthday,
+                    Birthday = coworkerDTO.Birthday.ToUniversalTime(),
                     EMail = coworkerDTO.EMail,
                     Position = coworkerDTO.Position,
                     Password = coworkerDTO.Password
                 });
+                Initializer.GetDbContext().SaveChanges();
 
                 success = true;
             }
@@ -321,13 +349,13 @@ namespace TaskTracking
             switch (category)
             {
                 case Category.Coworkers:
-                    return AllToTable(Initializer.GetCoworkerRepo().GetAllCoworkers());
+                    return AllToTable(CoworkersToDto(Initializer.GetDbContext().Coworkers.ToList()));
 
                 case Category.Projects:
-                    return AllToTable(Initializer.GetProjectRepo().GetAllProjects());
+                    return AllToTable(ProjectsToDto(Initializer.GetDbContext().Projects.ToList()));
 
                 case Category.Tasks:
-                    return AllToTable(Initializer.GetTaskRepo().GetAllTasks());
+                    return AllToTable(TasksToDto(Initializer.GetDbContext().Tasks.ToList()));
 
                 default:
                     throw new NotSupportedException($"Category {category} is not supported.");
@@ -404,7 +432,7 @@ namespace TaskTracking
         {
             Dictionary<FilterOptions, string> filters = new Dictionary<FilterOptions, string>();
             filters = DataToDictionary(filterOptions, filterOptionsValues);
-            List<CoworkerDTO> coworkerDTOs = Initializer.GetCoworkerRepo().GetFilteredCoworkers(filters);
+            List<CoworkerDTO> coworkerDTOs = GetFilteredCoworkers(filters);
             var tableCoworkers = AllToTable(coworkerDTOs);
             return tableCoworkers;
         }
@@ -412,7 +440,7 @@ namespace TaskTracking
         {
             Dictionary<FilterOptions, string> filters = new Dictionary<FilterOptions, string>();
             filters = DataToDictionary(filterOptions, filterOptionsValues);
-            List<ProjectDTO> projectDTOs = Initializer.GetProjectRepo().GetFilteredProjects(filters);
+            List<ProjectDTO> projectDTOs = GetFilteredProjects(filters);
             var tableProjects = AllToTable(projectDTOs);
             return tableProjects;
         }
@@ -420,7 +448,7 @@ namespace TaskTracking
         {
             Dictionary<FilterOptions, string> filters = new Dictionary<FilterOptions, string>();
             filters = DataToDictionary(filterOptions, filterOptionsValues);
-            List<TaskDTO> taskDTOs = Initializer.GetTaskRepo().GetFilteredTasks(filters);
+            List<TaskDTO> taskDTOs = GetFilteredTasks(filters);
             var tableProjects = AllToTable(taskDTOs);
             return tableProjects;  
         }
@@ -436,6 +464,193 @@ namespace TaskTracking
                 filters[filterOptions[i]] = filterOptionsValues[i];
             }
             return filters;
+        }
+
+        private static List<CoworkerDTO> GetFilteredCoworkers(Dictionary<FilterOptions, string> filters)
+        {
+            var coworkers = Initializer.GetDbContext().Coworkers.ToList();
+            var projects = Initializer.GetDbContext().Projects.ToList();
+            var tasks = Initializer.GetDbContext().Tasks.ToList();
+
+            List<Coworker> result = null;
+            var coworkersByPosition = new List<Coworker>();
+            var coworkersByProject = new List<Coworker>();
+
+            foreach (var filter in filters)
+            {
+                switch (filter.Key) 
+                {
+                    case FilterOptions.Position:
+                        coworkersByPosition = coworkers.Where(x => x.Position.ToString().ToLower() == filter.Value.ToLower()).ToList();
+                        break;
+                    case FilterOptions.Project:
+
+                        var coworkersFromProjects = projects.Where(p => p.Name.ToLower() == filter.Value.ToLower())
+                            .Select(x => x.Manager).ToList();
+                        var coworkersFromTasks = tasks.Where(p => p.Project.Name.ToLower() == filter.Value.ToLower())
+                            .Select(x => x.Employee).ToList();
+
+                        coworkersByProject = new List<Coworker>();
+                        coworkersByProject.AddRange(coworkersFromProjects);
+                        coworkersByProject.AddRange(coworkersFromTasks);
+                        coworkersByProject = coworkersByProject.Distinct().ToList();
+                        break;
+                }
+            }
+
+            if (filters.ContainsKey(FilterOptions.Position))
+            {
+                result = new List<Coworker>();
+                result.AddRange(coworkersByPosition);
+            }
+            if (filters.ContainsKey(FilterOptions.Project))
+            {
+                if (result == null)
+                {
+                    result.AddRange(coworkersByProject);
+                }
+                else
+                {
+                    result = result.Intersect(coworkersByProject).ToList();
+                }
+            }
+
+            return CoworkersToDto(result);
+
+        }
+
+        public static List<ProjectDTO> GetFilteredProjects(Dictionary<FilterOptions, string> filters)
+        {
+            var coworkers = Initializer.GetDbContext().Coworkers.ToList();
+            var projects = Initializer.GetDbContext().Projects.ToList();
+            var tasks = Initializer.GetDbContext().Tasks.ToList();
+
+            List<Project> result = null;
+            var projectByPriority = new List<Project>();
+            var projectByCoworker = new List<Project>();
+
+            foreach (var filter in filters)
+            {
+                switch (filter.Key)
+                {
+                    case FilterOptions.Priority:
+                        projectByPriority = projects.Where(x => x.Priority.ToString().ToLower() == filter.Value.ToLower()).ToList();
+                        break;
+                    case FilterOptions.Coworker:
+
+                        var projectsFromProjects = projects.Where(p => p.Manager.Name.ToLower() == filter.Value.ToLower()).ToList();
+                        var projectsFromTasks = tasks.Where(p => p.Employee.Name.ToLower() == filter.Value.ToLower())
+                            .Select(x => x.Project).ToList();
+
+                        projectByCoworker = new List<Project>();
+                        projectByCoworker.AddRange(projectsFromProjects);
+                        projectByCoworker.AddRange(projectsFromTasks);
+                        projectByCoworker = projectByCoworker.Distinct().ToList();
+                        break;
+                }
+            }
+
+            if (filters.ContainsKey(FilterOptions.Priority))
+            {
+                result = new List<Project>();
+                result.AddRange(projectByPriority);
+            }
+            if (filters.ContainsKey(FilterOptions.Coworker))
+            {
+                if (result == null)
+                {
+                    result.AddRange(projectByCoworker);
+                }
+                else
+                {
+                    result = result.Intersect(projectByCoworker).ToList();
+                }
+            }
+
+            return ProjectsToDto(result);
+
+        }
+
+        public static List<TaskDTO> GetFilteredTasks(Dictionary<FilterOptions, string> filters)
+        {
+            var tasks = Initializer.GetDbContext().Tasks.ToList();
+
+            foreach (var filter in filters)
+            {
+                switch (filter.Key)
+                {
+                    case FilterOptions.Coworker:
+                        tasks = tasks.Where(c => c.Manager.Name.ToLower() == filter.Value || c.Employee.Name.ToLower() == filter.Value).ToList();
+                        break;
+                    case FilterOptions.Priority:
+                        tasks = tasks.Where(c => c.Priority.ToString().ToLower() == filter.Value).ToList();
+                        break;
+                    case FilterOptions.Project:
+                        tasks = tasks.Where(c => c.Project.Name.ToLower() == filter.Value).ToList();
+                        break;
+                }
+            }
+
+            return TasksToDto(tasks);
+        }
+
+
+        private static List<CoworkerDTO> CoworkersToDto(List<Coworker> coworkers)
+        {
+            List<CoworkerDTO> list = new List<CoworkerDTO>();
+            foreach (var coworker in coworkers)
+            {
+                list.Add(new CoworkerDTO()
+                {
+                    Id = coworker.Id,
+                    Name = coworker.Name,
+                    Birthday = coworker.Birthday,
+                    EMail = coworker.EMail,
+                    Position = coworker.Position
+                });
+            }
+
+            return list;
+        }
+
+        private static List<ProjectDTO> ProjectsToDto(List<Project> projects)
+        {
+            List<ProjectDTO> list = new List<ProjectDTO>();
+            foreach (var project in projects)
+            {
+                list.Add(new ProjectDTO()
+                {
+                    Id = project.Id,
+                    Name = project.Name,
+                    DueDate = project.DueDate,
+                    Description = project.Description,
+                    Priority = project.Priority,
+                    ManagerId = project.ManagerId
+                });
+            }
+
+            return list;
+        } 
+        
+        private static List<TaskDTO> TasksToDto(List<Task> tasks)
+        {
+            List<TaskDTO> list = new List<TaskDTO>();
+            foreach (var task in tasks)
+            {
+                list.Add(new TaskDTO()
+                {
+                    Id = task.Id,
+                    Name = task.Name,
+                    DueDate = task.DueDate,
+                    Description = task.Description,
+                    Priority = task.Priority,
+                    ProjectId = task.ProjectId,
+                    ManagerId = task.ManagerId,
+                    EmployeeId = task.EmployeeId
+                });
+            }
+
+            return list;
         }
     }
 }
