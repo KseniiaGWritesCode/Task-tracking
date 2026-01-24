@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>Task_tracking</RootNamespace>
+    <RootNamespace>TaskTracking</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

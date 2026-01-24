@@ -27,10 +27,19 @@ namespace TaskTracking
                     builder.Configuration.GetConnectionString("DefaultConnection"));
             });
 
+            // Add NLog
+            //builder.Logging.ClearProviders();
+            builder.Logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace);
+            builder.Host.UseNLog();
 
+            // Controllers
+            builder.Services.AddControllers();
 
             var app = builder.Build();
 
+
+            app.UseHttpsRedirection();
+            app.MapControllers();
 
 
             using (var scope = app.Services.CreateScope())

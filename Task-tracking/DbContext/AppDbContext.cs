@@ -1,12 +1,15 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using TaskTracking.Entities.Coworker;
+using TaskTracking.Entities.Project;
+using TaskTracking.Entities.Task;
 
 namespace TaskTracking
 {
     public class AppDbContext : DbContext
     {
-        public DbSet<Task> Tasks { get; set; }
-        public DbSet<Coworker> Coworkers { get; set; }
-        public DbSet<Project> Projects { get; set; }
+        public DbSet<TaskModel> Tasks { get; set; }
+        public DbSet<CoworkerModel> Coworkers { get; set; }
+        public DbSet<ProjectModel> Projects { get; set; }
 
         //private readonly string _connectionString;
 
@@ -28,26 +31,26 @@ namespace TaskTracking
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Task>()
-                .HasOne<Project>()
+            modelBuilder.Entity<TaskModel>()
+                .HasOne<ProjectModel>()
                 .WithMany()
                 .HasForeignKey(t => t.ProjectId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Task>()
-                .HasOne<Coworker>()
+            modelBuilder.Entity<TaskModel>()
+                .HasOne<CoworkerModel>()
                 .WithMany()
                 .HasForeignKey(t => t.ManagerId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Task>()
-                .HasOne<Coworker>()
+            modelBuilder.Entity<TaskModel>()
+                .HasOne<CoworkerModel>()
                 .WithMany()
                 .HasForeignKey(t => t.EmployeeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Project>()
-                .HasOne<Coworker>()
+            modelBuilder.Entity<ProjectModel>()
+                .HasOne<CoworkerModel>()
                 .WithMany()
                 .HasForeignKey(t => t.ManagerId)
                 .OnDelete(DeleteBehavior.Restrict);
