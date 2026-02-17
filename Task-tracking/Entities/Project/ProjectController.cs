@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Reflection.Metadata.Ecma335;
 using TaskTracking.Entities.Project;
 
-namespace TaskTracking.Entities.Coworker
+namespace TaskTracking.Entities.Project
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -26,16 +26,16 @@ namespace TaskTracking.Entities.Coworker
             try
             {
                 var projects = await _context.Projects.ToListAsync();
-                projects.ForEach(c =>
+                projects.ForEach(p =>
                 {
                     projectDtos.Add(new ProjectGetDto()
                     {
-                        Id = c.Id,
-                        Name = c.Name,
-                        DueDate = c.DueDate,
-                        Description = c.Description,
-                        Priority = c.Priority,
-                        ManagerId = c.ManagerId
+                        Id = p.Id,
+                        Name = p.Name,
+                        DueDate = p.DueDate,
+                        Description = p.Description,
+                        Priority = p.Priority,
+                        ManagerId = p.ManagerId
                     });
                 });
             }

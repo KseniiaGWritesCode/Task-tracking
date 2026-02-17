@@ -5,9 +5,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace TaskTracking
 {
-    // Entity framework
+    /*
+        TODO FOR FUTURE:
+        ----------------
+            - add normal authorization with JWT
+            - add correct regustration of user: with e-mail and other shit
 
-    // Controllers
+     * */
 
     public class Program
     {
