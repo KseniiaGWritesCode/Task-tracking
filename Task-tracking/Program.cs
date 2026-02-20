@@ -12,6 +12,7 @@ namespace TaskTracking
             - add normal authorization with JWT
             - add correct regustration of user: with e-mail and other shit
             - change everywhere (Back + DB) ID from int to Guid
+            - Add tests for each endpoint
 
      * */
 
