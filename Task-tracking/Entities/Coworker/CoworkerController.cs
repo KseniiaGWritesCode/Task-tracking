@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Reflection.Metadata.Ecma335;
 using System.Security.Claims;
 using System.Xml.Linq;
+using TaskTracking.Entities.Project;
 
 namespace TaskTracking.Entities.Coworker
 {
@@ -99,10 +100,8 @@ namespace TaskTracking.Entities.Coworker
                 return ReturnSystemErrorWithLog(ex, nameof(DeleteCoworkerById));
             }
 
-            return Ok(new { message = "Creature deleted successfully", coworker });
+            return Ok(new { message = "Coworker deleted successfully", coworker });
         }
-
-         VALIDATION IS A PIECE OF SHIT; NEED TO FIND OUT WHAT S WRONG WITH IT
 
         //[Authorize]
         [HttpPost("create")]
@@ -121,16 +120,17 @@ namespace TaskTracking.Entities.Coworker
             CoworkerModel coworkerModel = new CoworkerModel()
             {
                 Name = newCoworker.Name,
-                Birthday = newCoworker.Birthday,
+                Birthday = newCoworker.Birthday.Value,
                 EMail = newCoworker.EMail,
-                Position = newCoworker.Position,
+                Position = newCoworker.Position.Value,
                 Password = BCrypt.Net.BCrypt.HashPassword(newCoworker.Password),
                 FavoriteToy = newCoworker.FavoriteToy
             };
 
             try
             {
-                await _context.Coworkers.AddAsync(coworkerModel);
+                var result = await _context.Coworkers.AddAsync(coworkerModel);
+                coworkerModel = result.Entity;
                 await _context.SaveChangesAsync();
             }
             catch (Exception ex)
@@ -139,9 +139,10 @@ namespace TaskTracking.Entities.Coworker
             }
 
             CoworkerGetDto coworkerGetDto = null;
-            coworkerModel = await _context.Coworkers.FirstOrDefaultAsync(c => c.EMail == newCoworker.EMail);
+            //coworkerModel = await _context.Coworkers.FirstOrDefaultAsync(c => c.EMail == newCoworker.EMail);
             if (coworkerModel != null)
             {
+                coworkerGetDto = new CoworkerGetDto();
                 coworkerGetDto.Id = coworkerModel.Id;
                 coworkerGetDto.Name = coworkerModel.Name;
                 coworkerGetDto.Birthday = coworkerModel.Birthday;
@@ -166,13 +167,13 @@ namespace TaskTracking.Entities.Coworker
             if (coworker == null) { return NotFound(new { message = "Coworker not found" }); }
 
             coworker.Name = updatedCoworker.Name;
-            coworker.Birthday = updatedCoworker.Birthday;
-            coworker.Position = updatedCoworker.Position;
+            coworker.Birthday = updatedCoworker.Birthday.Value;
+            coworker.Position = updatedCoworker.Position.Value;
             coworker.FavoriteToy = updatedCoworker.FavoriteToy;
 
             try
             {
-                _context.Coworkers.Update(coworker);
+                coworker = _context.Coworkers.Update(coworker).Entity;
                 await _context.SaveChangesAsync();
             }
             catch (Exception ex)
@@ -181,9 +182,10 @@ namespace TaskTracking.Entities.Coworker
             }
 
             CoworkerGetDto coworkerGetDto = null;
-            coworker = await _context.Coworkers.FindAsync(id);
+            //coworker = await _context.Coworkers.FindAsync(id);
             if (coworker != null)
             {
+                coworkerGetDto = new CoworkerGetDto();
                 coworkerGetDto.Id = coworker.Id;
                 coworkerGetDto.Name = coworker.Name;
                 coworkerGetDto.Birthday = coworker.Birthday;
@@ -193,9 +195,6 @@ namespace TaskTracking.Entities.Coworker
 
             return Ok(new { message = "Coworker updated successfully", coworkerGetDto });
         }
-
-
-
 
         private ObjectResult ReturnSystemErrorWithLog(Exception ex, string methodName)
         {

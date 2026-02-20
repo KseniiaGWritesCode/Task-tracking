@@ -32,29 +32,28 @@ namespace TaskTracking
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<TaskModel>()
-                .HasOne<ProjectModel>()
+                .HasOne(p => p.Project)
                 .WithMany()
                 .HasForeignKey(t => t.ProjectId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<TaskModel>()
-                .HasOne<CoworkerModel>()
+                .HasOne(p => p.Manager)
                 .WithMany()
                 .HasForeignKey(t => t.ManagerId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<TaskModel>()
-                .HasOne<CoworkerModel>()
+                .HasOne(p => p.Employee)
                 .WithMany()
                 .HasForeignKey(t => t.EmployeeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<ProjectModel>()
-                .HasOne<CoworkerModel>()
+                .HasOne(p => p.Manager)
                 .WithMany()
                 .HasForeignKey(t => t.ManagerId)
                 .OnDelete(DeleteBehavior.Restrict);
-
 
             base.OnModelCreating(modelBuilder);
         }

@@ -2,6 +2,7 @@ using NLog;
 using NLog.Web;
 using TaskTracking;
 using Microsoft.EntityFrameworkCore;
+using TaskTracking.Converters;
 
 namespace TaskTracking
 {
@@ -10,6 +11,7 @@ namespace TaskTracking
         ----------------
             - add normal authorization with JWT
             - add correct regustration of user: with e-mail and other shit
+            - change everywhere (Back + DB) ID from int to Guid
 
      * */
 
@@ -37,7 +39,14 @@ namespace TaskTracking
             builder.Host.UseNLog();
 
             // Controllers
-            builder.Services.AddControllers();
+            //builder.Services.AddControllers();
+
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.Converters
+                        .Add(new UtcDateTimeOffsetConverter());
+                });
 
             var app = builder.Build();
 
